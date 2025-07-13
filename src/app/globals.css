@@ -1,0 +1,230 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS for paper styling, margins, lines and effects */
+.paper {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  /* A4 proportions at standard size */
+  width: 210mm;
+  height: 297mm;
+  margin: 0 auto;
+}
+
+.paper:hover {
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* Lines styling */
+.paper.lines {
+  position: relative;
+}
+
+/* Ensure lines align across sections */
+.paper.lines .content-section {
+  background-image: linear-gradient(#e6e6e6 1px, transparent 1px);
+  background-size: 100% 24px;
+  background-position: 0 0;
+  position: relative;
+}
+
+/* Margins styling */
+.paper.with-margins .content {
+  margin-left: 50px;
+  margin-top: 50px;
+}
+
+.paper .left-margin {
+  position: absolute;
+  width: 50px;
+  height: 100%;
+  left: 0;
+  top: 0;
+  border-right: 1.5px solid #c1879c;
+  background-color: #f9f9f9;
+  z-index: 2;
+}
+
+.paper .top-margin {
+  position: absolute;
+  height: 50px;
+  width: 100%;
+  top: 0;
+  left: 0;
+  border-bottom: 1.5px solid #c1879c;
+  background-color: #f9f9f9;
+  z-index: 3;
+}
+
+/* Header section styling */
+.header-section {
+  position: relative;
+  border-bottom: 1px solid;
+  z-index: 2;
+}
+
+/* Content section styling */
+.content-section {
+  display: flex;
+  position: relative;
+}
+
+/* Side section styling */
+.side-section {
+  position: relative;
+  border-right: 1px solid;
+  z-index: 2;
+}
+
+/* Main section styling */
+.main-section {
+  position: relative;
+  z-index: 1;
+}
+
+/* Effects styling */
+.paper .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.paper .overlay.shadows {
+  display: block;
+  background-image: linear-gradient(10deg, #0003, #0000);
+}
+
+.paper .overlay.scanner {
+  display: block;
+  background-color: #0001;
+}
+
+/* Output styling */
+.generated-image {
+  max-width: 100%;
+  margin: 10px 0;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Editor styling */
+.paper .editor-container {
+  padding: 10px;
+  min-height: 100%;
+}
+
+.paper.with-margins .editor-container {
+  padding-left: 60px;
+  padding-top: 60px;
+}
+
+/* Fix for line alignment - ensure consistent spacing */
+.paper.lines .editor-container {
+  line-height: 24px;
+  min-height: 24px;
+}
+
+/* Ensure editors maintain line alignment */
+.paper.lines .header-section .slate-editor,
+.paper.lines .side-section .slate-editor,
+.paper.lines .main-section .slate-editor {
+  line-height: 24px;
+}
+
+.main-section .slate-editor,
+.side-section .slate-editor {
+  padding-top: 6px; /* Increase padding to better align text with lines */
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Remove default margins from paragraphs inside the editor */
+.slate-editor p {
+  margin: 0;
+  padding: 0;
+}
+
+/* Add line numbers to side margin */
+.paper.lines .side-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-image: linear-gradient(#e6e6e6 1px, transparent 1px);
+  background-size: 100% 24px;
+  background-position: 0 0;
+  pointer-events: none;
+}
+
+.page-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+    background-color: #f0f2f5;
+}
+
+.page-stack {
+    position: relative;
+    width: 210mm; /* A4 width */
+}
+
+.paper-root {
+    position: relative;
+    z-index: 1;
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.page-stack-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.top-margin {
+    position: absolute;
+    top: var(--header-margin, 40px);
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: var(--margin-color, #ffc0c0);
+}
+
+.left-margin {
+    position: absolute;
+    top: 0;
+    left: var(--side-margin, 40px);
+    bottom: 0;
+    width: 1px;
+    background-color: var(--margin-color, #ffc0c0);
+}
+
+.right-margin {
+    position: absolute;
+    top: 0;
+    right: var(--side-margin, 40px);
+    bottom: 0;
+    width: 1px;
+    background-color: var(--margin-color, #ffc0c0);
+}
