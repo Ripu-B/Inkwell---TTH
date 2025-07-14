@@ -36,33 +36,64 @@ const PaperEditor = () => {
   const paperClasses = [
     'paper',
     style.showRuledLines ? 'lines' : '',
+    effects.chromaticAberration ? 'chromatic-aberration' : ''
   ].filter(Boolean).join(' ');
 
+  const paperStyle: React.CSSProperties = {
+    backgroundColor: style.paperColor,
+    width: `${paperWidth}px`,
+    height: `${paperHeight}px`,
+    display: 'flex',
+    flexDirection: 'column',
+    margin: '0 auto',
+    position: 'relative',
+    ...shadowStyle,
+  };
+
+  if (effects.documentWeathering) {
+    paperStyle.backgroundColor = '#fdf5e6'; // A subtle yellowish tint
+  }
+
   return (
-    <div 
-      ref={paperRef} 
-      className={paperClasses} 
-      style={{
-        backgroundColor: style.paperColor,
-        width: `${paperWidth}px`,
-        height: `${paperHeight}px`,
-        display: 'flex',
-        flexDirection: 'column',
-        margin: '0 auto',
-        position: 'relative',
-        ...shadowStyle
-      }}
+    <div
+      ref={paperRef}
+      className={paperClasses}
+      style={paperStyle}
+      data-text={mainContent.map(node => 'children' in node ? (node.children as any[]).map(c => c.text).join('') : '').join('\n')}
     >
+      {/* Realism Effect Layers */}
+      {effects.paperGrainEnabled && <div className="paper-grain" style={{ opacity: effects.paperGrainIntensity }} />}
+      {effects.documentWeathering && <div className="document-weathering" style={{ opacity: effects.weatheringIntensity }} />}
+      {effects.noiseIntensity > 0 && <div className="noise-overlay" style={{ opacity: effects.noiseIntensity }} />}
+      {effects.lightBarGradient && <div className="light-bar-gradient" />}
+      {effects.bindingEffects && (
+        <>
+          <div className="binding-effect" />
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="binding-hole" style={{ top: `${(i + 1) * (100 / 11)}%` }} />
+          ))}
+        </>
+      )}
+
       {style.showMargins && style.showHeaderMargin && (
         <div className="header-section" style={{
           height: `${headerHeight}px`,
           borderBottom: `1px solid ${style.marginColor}`,
-          backgroundColor: style.paperColor,
+          backgroundColor: 'transparent',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '5px 20px',
+          position: 'relative',
         }}>
+          <div style={{
+            position: 'absolute',
+            bottom: '-3px',
+            left: 0,
+            right: 0,
+            height: '1px',
+            backgroundColor: style.marginColor
+          }}/>
           <Editor
             content={headerContent}
             setContent={setHeaderContent}
@@ -94,6 +125,14 @@ const PaperEditor = () => {
             backgroundColor: 'transparent',
             position: 'relative',
           }}>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              right: '-3px',
+              width: '1px',
+              backgroundColor: style.marginColor
+            }} />
             <Editor
               content={sideContent}
               setContent={setSideContent}

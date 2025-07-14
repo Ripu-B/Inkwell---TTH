@@ -4,15 +4,181 @@ import React, { useRef, useEffect } from 'react';
 import { useContentStore } from '@/stores/contentStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useEffectsStore } from '@/stores/effectsStore';
-import { Descendant } from 'slate';
 import { generatePaperTexture } from '@/utils/paperTexture';
 import jsPDF from 'jspdf';
 
 const PreviewCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const content = useContentStore((state) => state.content);
+  const { mainContent } = useContentStore();
   const style = useStyleStore();
   const effects = useEffectsStore();
+
+  // Apply chromatic aberration effect
+  const applyChromaticAberration = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, intensity: number): void => {
+    // Skip if intensity is 0
+    if (intensity === 0) return;
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const newData = new Uint8ClampedArray(data);
+    
+    // Calculate offset based on intensity (0-1)
+    const offset = Math.ceil(intensity * 3);
+    
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const currentIndex = (y * canvas.width + x) * 4;
+        
+        // Red channel shifted left
+        const redIndex = (y * canvas.width + Math.max(0, x - offset)) * 4;
+        // Blue channel shifted right
+        const blueIndex = (y * canvas.width + Math.min(canvas.width - 1, x + offset)) * 4;
+        
+        // Apply the shifted colors
+        newData[currentIndex] = data[redIndex];         // Red
+        // Green stays the same
+        newData[currentIndex + 2] = data[blueIndex + 2]; // Blue
+      }
+    }
+    
+    // Create new ImageData and put it back
+    const newImageData = new ImageData(newData, canvas.width, canvas.height);
+    ctx.putImageData(newImageData, 0, 0);
+  };
+
+  // Apply contrast to image data
+  const applyContrastEffect = (imageData: ImageData, contrast: number): void => {
+    const data = imageData.data;
+    contrast *= 255;
+    const factor = (contrast + 255) / (255.01 - contrast);
+    
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = factor * (data[i] - 128) + 128;     // Red
+      data[i + 1] = factor * (data[i + 1] - 128) + 128; // Green
+      data[i + 2] = factor * (data[i + 2] - 128) + 128; // Blue
+    }
+  };
+
+  // Apply noise effect
+  const applyNoiseEffect = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, intensity: number): void => {
+    // Skip if intensity is 0
+    if (intensity === 0) return;
+    
+    const noiseCanvas = document.createElement('canvas');
+    noiseCanvas.width = canvas.width;
+    noiseCanvas.height = canvas.height;
+    const noiseCtx = noiseCanvas.getContext('2d');
+    
+    if (noiseCtx) {
+      const noiseData = noiseCtx.createImageData(canvas.width, canvas.height);
+      const noiseBuffer = noiseData.data;
+      
+      // Generate noise
+      for (let i = 0; i < noiseBuffer.length; i += 4) {
+        const noise = Math.floor(Math.random() * 20 * intensity) - 10 * intensity;
+        noiseBuffer[i] = noiseBuffer[i + 1] = noiseBuffer[i + 2] = noise;
+        noiseBuffer[i + 3] = 10 * intensity; // Low opacity, scaled by intensity
+      }
+      
+      noiseCtx.putImageData(noiseData, 0, 0);
+      
+      // Overlay noise on main canvas
+      ctx.globalAlpha = 0.2 * intensity;
+      ctx.drawImage(noiseCanvas, 0, 0);
+      ctx.globalAlpha = 1.0;
+    }
+  };
+
+  // Apply light bar gradient effect
+  const applyLightBarGradient = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void => {
+    // Create a gradient from top to bottom
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+    
+    // Apply the gradient
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'source-over';
+  };
+
+  // Apply document weathering effect
+  const applyWeatheringEffect = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, intensity: number): void => {
+    // Skip if intensity is 0
+    if (intensity === 0) return;
+    
+    // Create some random stains and creases
+    ctx.globalAlpha = 0.05 * intensity;
+    
+    // Add some yellowish tint to simulate aging
+    ctx.fillStyle = 'rgba(255, 240, 200, 0.1)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add some random stains
+    const stainCount = Math.floor(intensity * 10);
+    for (let i = 0; i < stainCount; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const radius = Math.random() * 50 * intensity + 10;
+      const color = `rgba(${Math.floor(Math.random() * 100)}, ${Math.floor(Math.random() * 70)}, ${Math.floor(Math.random() * 40)}, ${Math.random() * 0.1 * intensity})`;
+      
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+    
+    // Add some creases
+    const creaseCount = Math.floor(intensity * 5);
+    for (let i = 0; i < creaseCount; i++) {
+      const x1 = Math.random() * canvas.width;
+      const y1 = Math.random() * canvas.height;
+      const x2 = Math.random() * canvas.width;
+      const y2 = Math.random() * canvas.height;
+      
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = `rgba(100, 100, 100, ${Math.random() * 0.1 * intensity})`;
+      ctx.lineWidth = Math.random() * 2 * intensity;
+      ctx.stroke();
+    }
+    
+    ctx.globalAlpha = 1.0;
+  };
+
+  // Apply binding effects
+  const applyBindingEffects = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void => {
+    // Draw binding holes or spiral on the left side
+    const holeCount = 10;
+    const holeRadius = 8;
+    const margin = 15;
+    
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.8)';
+    ctx.strokeStyle = 'rgba(150, 150, 150, 0.8)';
+    ctx.lineWidth = 1;
+    
+    for (let i = 0; i < holeCount; i++) {
+      const y = (canvas.height / (holeCount + 1)) * (i + 1);
+      
+      // Draw hole
+      ctx.beginPath();
+      ctx.arc(margin, y, holeRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Draw shadow
+      ctx.beginPath();
+      ctx.arc(margin + 1, y + 1, holeRadius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fill();
+      
+      // Reset fill style
+      ctx.fillStyle = 'rgba(200, 200, 200, 0.8)';
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -96,7 +262,7 @@ const PreviewCanvas = () => {
     let y = style.margins.top + style.fontSize;
     const textWidth = targetW - style.margins.left - style.margins.right;
 
-    content.forEach((node: any) => {
+    mainContent.forEach((node: any) => {
       if (node.type === 'paragraph') {
         let line = '';
         node.children.forEach((text: any) => {
@@ -104,7 +270,7 @@ const PreviewCanvas = () => {
             const testLine = line + word + ' ';
             const metrics = targetCtx.measureText(testLine);
             if (metrics.width > textWidth) {
-              drawLine(targetCtx, line, style.margins.left, y, effects.handwritingRandomization, style.fontSize);
+              drawLine(targetCtx, line, style.margins.left, y, effects, style.fontSize);
               line = word + ' ';
               y += style.fontSize * 1.2 + style.wordSpacing;
             } else {
@@ -113,7 +279,7 @@ const PreviewCanvas = () => {
           });
         });
         if (line) {
-          drawLine(targetCtx, line, style.margins.left, y, effects.handwritingRandomization, style.fontSize);
+          drawLine(targetCtx, line, style.margins.left, y, effects, style.fontSize);
           y += style.fontSize * 1.2 + style.wordSpacing;
         }
         y += style.letterSpacing;
@@ -128,36 +294,43 @@ const PreviewCanvas = () => {
       ctx.filter = 'none';
     }
 
-    if (effects.scannerEnabled) {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const pixels = imageData.data;
-
-      // Contrast boost (1.2 factor)
-      // Noise (small random)
-      // Light bar gradient (faint vertical gradient)
-      for (let i = 0; i < pixels.length; i += 4) {
-        // Contrast
-        pixels[i] = Math.min(255, Math.max(0, (pixels[i] - 128) * 1.2 + 128));     // red
-        pixels[i + 1] = Math.min(255, Math.max(0, (pixels[i + 1] - 128) * 1.2 + 128)); // green
-        pixels[i + 2] = Math.min(255, Math.max(0, (pixels[i + 2] - 128) * 1.2 + 128)); // blue
-
-        // Add noise
-        const noise = (Math.random() - 0.5) * 10;
-        pixels[i] = Math.min(255, Math.max(0, pixels[i] + noise));
-        pixels[i + 1] = Math.min(255, Math.max(0, pixels[i + 1] + noise));
-        pixels[i + 2] = Math.min(255, Math.max(0, pixels[i + 2] + noise));
-
-        // Light bar gradient (assuming vertical scan)
-        const y = Math.floor((i / 4) / canvas.width);
-        const gradient = (y / canvas.height) * 10 - 5; // subtle from -5 to 5
-        pixels[i] = Math.min(255, Math.max(0, pixels[i] + gradient));
-        pixels[i + 1] = Math.min(255, Math.max(0, pixels[i + 1] + gradient));
-        pixels[i + 2] = Math.min(255, Math.max(0, pixels[i + 2] + gradient));
+    // Apply all realism effects
+    try {
+      // Apply contrast boost
+      if (effects.contrastBoost !== 1.0) {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        applyContrastEffect(imageData, effects.contrastBoost - 1.0);
+        ctx.putImageData(imageData, 0, 0);
       }
-
-      ctx.putImageData(imageData, 0, 0);
+      
+      // Apply chromatic aberration
+      if (effects.chromaticAberration) {
+        applyChromaticAberration(ctx, canvas, effects.chromaticIntensity);
+      }
+      
+      // Apply noise
+      if (effects.noiseIntensity > 0) {
+        applyNoiseEffect(ctx, canvas, effects.noiseIntensity);
+      }
+      
+      // Apply light bar gradient
+      if (effects.lightBarGradient) {
+        applyLightBarGradient(ctx, canvas);
+      }
+      
+      // Apply document weathering
+      if (effects.documentWeathering) {
+        applyWeatheringEffect(ctx, canvas, effects.weatheringIntensity);
+      }
+      
+      // Apply binding effects
+      if (effects.bindingEffects) {
+        applyBindingEffects(ctx, canvas);
+      }
+    } catch (error) {
+      console.error('Failed to apply effects:', error);
     }
-  }, [content, style, effects]);
+  }, [mainContent, style, effects]);
 
   return (
     <div>
@@ -198,12 +371,23 @@ const PreviewCanvas = () => {
   );
 };
 
-function drawLine(targetCtx: CanvasRenderingContext2D, line: string, x: number, y: number, randomize: boolean, fontSize: number) {
+function drawLine(
+  targetCtx: CanvasRenderingContext2D, 
+  line: string, 
+  x: number, 
+  y: number, 
+  effects: any, 
+  fontSize: number
+) {
   let currentX = x;
-  for (const char of line) {
+  for (const [i, char] of line.split('').entries()) {
     targetCtx.save();
-    targetCtx.translate(currentX, y);
-    if (randomize) {
+    
+    // Calculate baseline wobble
+    const wobble = effects.baselineWobbleEnabled ? Math.sin(i * 0.5) * effects.baselineWobbleIntensity * 5 : 0;
+    targetCtx.translate(currentX, y + wobble);
+    
+    if (effects.handwritingRandomization) {
       const rotation = (Math.random() - 0.5) * 0.05;
       const scale = 1 + (Math.random() - 0.5) * 0.05;
       const offsetY = (Math.random() - 0.5) * 0.5;
@@ -211,6 +395,32 @@ function drawLine(targetCtx: CanvasRenderingContext2D, line: string, x: number, 
       targetCtx.scale(scale, scale);
       targetCtx.translate(0, offsetY);
     }
+    
+    // Apply pen pressure variation if enabled
+    if (effects.penPressureVariation) {
+      const pressure = 1 - Math.random() * effects.penPressureIntensity * 0.3;
+      targetCtx.globalAlpha = 0.7 + pressure * 0.3;
+      
+      // Simulate pen pressure by varying the font weight
+      const weight = Math.floor(400 + pressure * 200);
+      const fontParts = targetCtx.font.split(' ');
+      if (fontParts.length > 1) {
+        fontParts[0] = `${weight}`;
+        targetCtx.font = fontParts.join(' ');
+      }
+      
+      // Add subtle text shadow for ink bleed effect
+      const bleedAmount = Math.random() * effects.penPressureIntensity * 0.5;
+      targetCtx.shadowColor = targetCtx.fillStyle.toString();
+      targetCtx.shadowBlur = bleedAmount;
+    }
+    
+    // Apply font size variation
+    if (effects.fontSizeVariationEnabled && Math.random() < 0.1) {
+      const variation = (Math.random() - 0.5) * effects.fontSizeVariationIntensity * 0.5;
+      targetCtx.font = `${fontSize * (1 + variation)}px ${targetCtx.font.split('px ')[1]}`;
+    }
+    
     targetCtx.fillText(char, 0, 0);
     targetCtx.restore();
     currentX += targetCtx.measureText(char).width;

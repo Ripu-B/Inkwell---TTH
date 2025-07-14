@@ -1,17 +1,38 @@
 'use client';
 
-import React, { useCallback, useMemo, type ReactNode } from 'react';
+import React, { useCallback, useMemo, type ReactNode, useEffect, useState } from 'react';
 import { createEditor, Descendant, Transforms } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import { withHistory } from 'slate-history';
 import { useContentStore } from '@/stores/contentStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useFormattingStore } from '@/stores/formattingStore';
+import { useEffectsStore } from '@/stores/effectsStore';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 import SlateToolbar from './SlateToolbar';
 
 import { CustomElement, CustomText } from '@/types/slate.d';
+import { Editor as SlateEditor, Node, Path, Element } from 'slate';
+
+const withConstraints = (editor: SlateEditor) => {
+  const { normalizeNode } = editor;
+  editor.normalizeNode = (entry: [Node, Path]) => {
+    const [node, path] = entry;
+    if (path.length === 0) {
+      if (editor.children.length === 0) {
+        Transforms.insertNodes(editor, [{ type: 'paragraph', children: [{ text: '\u200B' }] }] as Node[]);
+      }
+      for (const [child, childPath] of Node.children(editor, [])) {
+        if (Element.isElement(child) && !editor.isInline(child) && child.type !== 'paragraph') {
+          Transforms.setNodes(editor, { type: 'paragraph' }, { at: childPath });
+        }
+      }
+    }
+    return normalizeNode(entry);
+  };
+  return editor;
+};
 
 const initialValue: Descendant[] = [
   {
@@ -49,9 +70,16 @@ const Editor = ({
   styleOverrides = {},
   placeholder = 'Enter your text here...',
 }: EditorProps) => {
-  const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+  const editor = useMemo(() => withConstraints(withHistory(withReact(createEditor()))), []);
   const style = useStyleStore();
   const formatting = useFormattingStore();
+  const effects = useEffectsStore();
+  const [isMounted, setIsMounted] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const renderElement = useCallback((props: RenderElementProps) => {
     switch (props.element.type) {
@@ -86,10 +114,50 @@ const Editor = ({
       children = <sup style={{ fontSize: `${style.superscriptSize}em` }}>{children}</sup>;
     }
     if (formatting.subscript || props.leaf.subscript) {
-      children = <sub style={{ fontSize: `${style.subscriptSize}em` }}>{children}</sub>;
+      children = <sub style={{ fontSize: `${style.superscriptSize}em` }}>{children}</sub>;
     }
+    
+    const text = props.leaf.text;
+    
+    if (isMounted && !isFocused && (effects.inkFlowVariation || effects.fontSizeVariationEnabled || effects.baselineWobbleEnabled)) {
+      return (
+        <span {...props.attributes}>
+          {text.split('').map((char, index) => {
+            const charStyle: React.CSSProperties = {};
+            let transform = '';
+
+            if (effects.inkFlowVariation) {
+              const variation = (Math.random() - 0.5) * effects.inkFlowIntensity * 0.08;
+              const rotation = (Math.random() - 0.5) * effects.inkFlowIntensity * 3;
+              transform += `scale(${1 + variation}) rotate(${rotation}deg)`;
+            }
+
+            if (effects.baselineWobbleEnabled) {
+              const wobble = Math.sin(index * 0.5 + Math.random() * 0.5) * effects.baselineWobbleIntensity * 2;
+              transform += ` translateY(${wobble}px)`;
+            }
+
+            if (transform) {
+              charStyle.transform = transform;
+              charStyle.display = 'inline-block';
+            }
+
+            if (effects.fontSizeVariationEnabled && Math.random() < 0.2) {
+              const variation = (Math.random() - 0.5) * effects.fontSizeVariationIntensity;
+              charStyle.fontSize = `${style.fontSize * (1 + variation)}px`;
+            }
+
+            if (Object.keys(charStyle).length > 0) {
+              return <span key={index} style={charStyle}>{char}</span>;
+            }
+            return char;
+          })}
+        </span>
+      );
+    }
+    
     return <span {...props.attributes}>{children}</span>;
-  }, [style.superscriptSize, style.subscriptSize, formatting.bold, formatting.italic, formatting.underline, formatting.superscript, formatting.subscript]);
+  }, [style, formatting, effects, isMounted, isFocused]);
 
   const isMarkActive = (format: string) => {
     const marks = editor.marks;
@@ -139,6 +207,8 @@ const Editor = ({
         renderLeaf={renderLeaf}
         placeholder={placeholder}
         onKeyDown={onKeyDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         className="outline-none slate-editor"
         style={{
           color: style.inkColor,
@@ -147,7 +217,8 @@ const Editor = ({
           letterSpacing: `${style.letterSpacing}px`,
           wordSpacing: `${style.wordSpacing}px`,
           lineHeight: style.lineHeight,
-          ...styleOverrides
+          whiteSpace: "pre-wrap",
+          ...styleOverrides,
         }}
       />
     </Slate>

@@ -5,6 +5,7 @@ import { useStyleStore } from '@/stores/styleStore';
 import { useEffectsStore } from '@/stores/effectsStore';
 import { useFormattingStore } from '@/stores/formattingStore';
 import { generateImage } from '@/utils/generate';
+import AdvancedRealismPanel from './AdvancedRealismPanel';
 
 const CustomizationPanel = () => {
   const style = useStyleStore();
@@ -347,6 +348,11 @@ const CustomizationPanel = () => {
             <input type="checkbox" checked={effects.handwritingRandomization} onChange={(e) => effects.setHandwritingRandomization(e.target.checked)} />
           </div>
         </div>
+      </section>
+      
+      {/* Advanced Realism section */}
+      <section className="mb-6">
+        <AdvancedRealismPanel />
       </section>
       
       <button onClick={generateImage} className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">

@@ -10,7 +10,9 @@ type ContentState = {
   setMainContent: (content: Descendant[]) => void;
 };
 
-const emptyInitialValue: Descendant[] = [{ type: 'paragraph', children: [{ text: '' }] }];
+const emptyInitialValue: Descendant[] = [
+  { type: 'paragraph', children: [{ text: '\u200B' }] }
+];
 
 export const useContentStore = create<ContentState>((set) => ({
   headerContent: emptyInitialValue,
