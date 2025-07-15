@@ -1,5 +1,7 @@
 import html2canvas from 'html2canvas';
 import { useEffectsStore } from '@/stores/effectsStore';
+import { useStyleStore } from '@/stores/styleStore';
+import { generatePaperTexture } from './paperTexture';
 
 // Store pages in memory
 let pages: HTMLElement[] = [];
@@ -59,6 +61,8 @@ export const generateImage = async () => {
   
   // Get effects settings from the store
   const effects = useEffectsStore.getState();
+  // Get style settings from the store
+  const style = useStyleStore.getState();
   
   // Clear output first
   clearOutput();
@@ -141,7 +145,9 @@ export const generateImage = async () => {
             for (const char of el.innerText) {
               const variation = (Math.random() - 0.5) * effects.inkFlowIntensity * 0.08;
               const rotation = (Math.random() - 0.5) * effects.inkFlowIntensity * 3;
-              newHTML += `<span class="ink-flow-text" style="transform: scale(${1 + variation}) rotate(${rotation}deg);">${char}</span>`;
+              // Make sure the ink color is applied to each character span
+              const inkColor = el.style.color || style.inkColor;
+              newHTML += `<span class="ink-flow-text" style="transform: scale(${1 + variation}) rotate(${rotation}deg); color: ${inkColor};">${char}</span>`;
             }
             el.innerHTML = newHTML;
           }
@@ -149,10 +155,15 @@ export const generateImage = async () => {
       }
       
       if (effects.baselineWobbleEnabled) {
-        const paragraphs = pagePaper.querySelectorAll('p');
-        paragraphs.forEach(p => {
-          if (p instanceof HTMLElement) {
-            p.classList.add('baseline-wobble');
+        const textElements = pagePaper.querySelectorAll('p, span:not(.baseline-wobble-span)');
+        textElements.forEach(el => {
+          if (el instanceof HTMLElement && el.innerText.trim()) {
+            let newHTML = '';
+            [...el.innerText].forEach((char, index) => {
+              const wobble = Math.sin(index * 0.5 + Math.random() * 0.5) * effects.baselineWobbleIntensity * 2;
+              newHTML += `<span class="baseline-wobble-span" style="transform: translateY(${wobble}px); display: inline-block;">${char}</span>`;
+            });
+            el.innerHTML = newHTML;
           }
         });
       }
@@ -244,6 +255,11 @@ export const generateImage = async () => {
           // Apply binding effects
           if (effects.bindingEffects) {
             applyBindingEffects(ctx, canvas);
+          }
+
+          // Apply paper grain
+          if (effects.paperGrainEnabled) {
+            applyPaperGrainEffect(ctx, canvas, effects.paperGrainIntensity);
           }
           
           // Add to output
@@ -345,15 +361,15 @@ const applyNoiseEffect = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
     
     // Generate noise
     for (let i = 0; i < noiseBuffer.length; i += 4) {
-      const noise = Math.floor(Math.random() * 20 * intensity) - 10 * intensity;
+      const noise = Math.floor(Math.random() * 30 * intensity) - 15 * intensity;
       noiseBuffer[i] = noiseBuffer[i + 1] = noiseBuffer[i + 2] = noise;
-      noiseBuffer[i + 3] = 10 * intensity; // Low opacity, scaled by intensity
+      noiseBuffer[i + 3] = 20 * intensity; // Higher opacity, scaled by intensity
     }
     
     noiseCtx.putImageData(noiseData, 0, 0);
     
     // Overlay noise on main canvas
-    ctx.globalAlpha = 0.2 * intensity;
+    ctx.globalAlpha = 0.3 * intensity;
     ctx.drawImage(noiseCanvas, 0, 0);
     ctx.globalAlpha = 1.0;
   }
@@ -387,7 +403,7 @@ const applyWeatheringEffect = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvas
   ctx.globalAlpha = 0.05 * intensity;
   
   // Add some yellowish tint to simulate aging
-  ctx.fillStyle = 'rgba(255, 240, 200, 0.1)';
+  ctx.fillStyle = `rgba(255, 240, 200, ${0.1 * intensity})`;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
   // Add some random stains
@@ -454,6 +470,25 @@ const applyBindingEffects = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEl
     // Reset fill style
     ctx.fillStyle = 'rgba(200, 200, 200, 0.8)';
   }
+};
+
+/**
+ * Apply paper grain effect
+ */
+const applyPaperGrainEffect = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, intensity: number): void => {
+  // Skip if intensity is 0
+  if (intensity === 0) return;
+  
+  const grainTexture = generatePaperTexture(canvas.width, canvas.height, intensity);
+  
+  // Apply grain texture with multiply blend mode
+  ctx.globalAlpha = 0.4 * intensity;
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.drawImage(grainTexture, 0, 0);
+  
+  // Reset composite operation and alpha
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1.0;
 };
 
 /**

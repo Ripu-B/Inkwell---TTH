@@ -188,12 +188,18 @@ const Editor = ({
 
   const onKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (!event.ctrlKey) return;
+    
+    // Allow native copy/paste/select all to work
+    if (event.key === 'c' || event.key === 'v' || event.key === 'a') {
+      return;
+    }
+    
     event.preventDefault();
     switch (event.key) {
       case 'b': toggleFormat('bold'); break;
       case 'i': toggleFormat('italic'); break;
       case 'u': toggleFormat('underline'); break;
-      case 'S': if (event.shiftKey) toggleFormat('superscript'); break;
+      case 'o': if (event.shiftKey) toggleFormat('superscript'); break;
       case 's': if (event.shiftKey) toggleFormat('subscript'); break;
       case 'm': insertMath(); break;
     }

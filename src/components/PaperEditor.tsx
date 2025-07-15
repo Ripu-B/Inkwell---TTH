@@ -50,10 +50,6 @@ const PaperEditor = () => {
     ...shadowStyle,
   };
 
-  if (effects.documentWeathering) {
-    paperStyle.backgroundColor = '#fdf5e6'; // A subtle yellowish tint
-  }
-
   return (
     <div
       ref={paperRef}

@@ -167,7 +167,7 @@ export const useStyleStore = create<StyleState>((set) => ({
   superscriptSize: 0.7,
   
   // Actions
-  setInkColor: (inkColor) => set({ inkColor }),
+  setInkColor: (inkColor) => set({ inkColor, headerInkColor: inkColor, sideNoteInkColor: inkColor, mainContentInkColor: inkColor }),
   setPaperColor: (paperColor) => set({ paperColor }),
   setFontFamily: (fontFamily) => set({ fontFamily }),
   setFontSize: (fontSize) => set({ fontSize }),

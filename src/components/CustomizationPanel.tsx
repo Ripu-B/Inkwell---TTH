@@ -207,7 +207,7 @@ const CustomizationPanel = () => {
                 onChange={() => formatting.toggleSuperscript()} 
                 className="w-4 h-4"
               />
-              <span className="text-xs text-gray-500">Ctrl+Shift+S</span>
+              <span className="text-xs text-gray-500">Ctrl+Shift+O</span>
             </div>
           </div>
           <div className="flex items-center justify-between">
@@ -220,7 +220,7 @@ const CustomizationPanel = () => {
                 onChange={() => formatting.toggleSubscript()} 
                 className="w-4 h-4"
               />
-              <span className="text-xs text-gray-500">Ctrl+Shift+s</span>
+              <span className="text-xs text-gray-500">Ctrl+Shift+S</span>
             </div>
           </div>
         </div>
