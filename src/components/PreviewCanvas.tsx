@@ -385,7 +385,7 @@ const PreviewCanvas = () => {
       
       // Apply chromatic aberration
       if (effects.chromaticAberration) {
-        applyChromaticAberration(ctx, canvas, effects.chromaticIntensity);
+        applyChromaticAberration(ctx, canvas.width, canvas.height, effects.chromaticIntensity);
       }
       
       // Apply noise
@@ -395,7 +395,7 @@ const PreviewCanvas = () => {
       
       // Apply light bar gradient
       if (effects.lightBarGradient) {
-        applyCanvasLightBarGradient(ctx, canvas);
+        applyCanvasLightBarGradient(ctx, canvas.width, canvas.height);
       }
       
       // Apply document weathering

@@ -1,7 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Homemade_Apple, Caveat, Liu_Jian_Mao_Cao, Indie_Flower, Zeyada } from 'next/font/google';
+import { Homemade_Apple, Caveat, Liu_Jian_Mao_Cao, Indie_Flower, Zeyada, Crimson_Text } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'] });
 const homemadeApple = Homemade_Apple({
@@ -28,16 +28,31 @@ const zeyada = Zeyada({
   weight: "400",
   subsets: ["latin"],
 });
+const crimsonText = Crimson_Text({
+  variable: "--font-crimson-text",
+  weight: ["400", "600", "700"],
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: 'Inkwell',
-  description: 'Digital to analog document simulator',
+  description: 'The most advanced text to handwriting tool.',
+};
+
+// Load Etna Sans Serif font
+const loadEtnaSansSerif = () => {
+  if (typeof window !== 'undefined') {
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} ${homemadeApple.variable} ${caveat.variable} ${liuJianMaoCao.variable} ${indieFlower.variable} ${zeyada.variable}`}>{children}</body>
+      <body className={`${inter.className} ${homemadeApple.variable} ${caveat.variable} ${liuJianMaoCao.variable} ${indieFlower.variable} ${zeyada.variable} ${crimsonText.variable}`}>{children}</body>
     </html>
   );
 } 

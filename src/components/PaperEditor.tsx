@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, CSSProperties } from 'react';
+import { Descendant } from 'slate';
 import Editor from './Editor';
 import { useStyleStore } from '@/stores/styleStore';
 import { useEffectsStore } from '@/stores/effectsStore';
@@ -60,12 +61,24 @@ const PaperEditor = () => {
     ...shadowStyle,
   };
 
+  // Create text content for chromatic aberration
+  const extractTextContent = (content: Descendant[]) => {
+    return content.map(node => {
+      if ('children' in node) {
+        return (node.children as any[]).map(c => c.text || '').join('');
+      }
+      return '';
+    }).join('\n');
+  };
+
+  const mainText = extractTextContent(mainContent);
+
   return (
     <div
       ref={paperRef}
       className={paperClasses}
       style={paperStyle}
-      data-text={mainContent.map(node => 'children' in node ? (node.children as any[]).map(c => c.text).join('') : '').join('\n')}
+      data-text={mainText}
     >
       {/* Realism Effect Layers */}
       {effects.paperGrainEnabled && <div className="paper-grain" style={{ opacity: effects.paperGrainIntensity }} />}

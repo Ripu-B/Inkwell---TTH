@@ -225,8 +225,13 @@ const Editor = ({
           lineHeight: style.lineHeight,
           whiteSpace: "pre-wrap",
           transform: `translateY(${style.baselineOffset}px)`,
+          minHeight: '100px',
+          padding: '8px',
+          cursor: 'text',
           ...styleOverrides,
         }}
+        spellCheck={false}
+        autoFocus={false}
       />
     </Slate>
   );
