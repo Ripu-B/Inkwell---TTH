@@ -13,6 +13,7 @@ type StyleState = {
   letterSpacing: number;
   wordSpacing: number;
   lineHeight: number;
+  baselineOffset: number;
   
   // Section-specific styling
   headerFontSize: number;
@@ -73,6 +74,7 @@ type StyleState = {
   setLetterSpacing: (spacing: number) => void;
   setWordSpacing: (spacing: number) => void;
   setLineHeight: (height: number) => void;
+  setBaselineOffset: (offset: number) => void;
   
   // Section-specific actions
   setHeaderFontSize: (size: number) => void;
@@ -119,6 +121,7 @@ export const useStyleStore = create<StyleState>((set) => ({
   letterSpacing: 0,
   wordSpacing: 0,
   lineHeight: 1.5,
+  baselineOffset: 0,
   
   // Section-specific styling defaults
   headerFontSize: 20,
@@ -174,6 +177,7 @@ export const useStyleStore = create<StyleState>((set) => ({
   setLetterSpacing: (letterSpacing) => set({ letterSpacing }),
   setWordSpacing: (wordSpacing) => set({ wordSpacing }),
   setLineHeight: (lineHeight) => set({ lineHeight }),
+  setBaselineOffset: (baselineOffset) => set({ baselineOffset }),
   
   // Section-specific actions
   setHeaderFontSize: (headerFontSize) => set({ headerFontSize }),

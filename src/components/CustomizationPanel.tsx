@@ -13,11 +13,11 @@ const CustomizationPanel = () => {
   const formatting = useFormattingStore();
 
   return (
-    <div className="customization-panel p-4 bg-gray-100 rounded-lg shadow-md overflow-y-auto max-h-screen">
+    <div className="customization-panel p-4 bg-white rounded-lg shadow-md overflow-y-auto max-h-screen space-y-6 divide-y divide-gray-200">
       <h2 className="text-xl font-bold mb-4">Customization Options</h2>
       
       {/* Styles section */}
-      <section className="mb-6">
+      <section className="pt-4 first:pt-0">
         <h3 className="text-lg font-semibold mb-2">Styles</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -69,13 +69,18 @@ const CustomizationPanel = () => {
               <option value="Letter">Letter</option>
               <option value="Legal">Legal</option>
               <option value="A5">A5</option>
+              <option value="Executive">Executive</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Baseline Offset</label>
+            <input type="number" step="0.1" value={style.baselineOffset} onChange={(e) => style.setBaselineOffset(Number(e.target.value))} className="w-full p-1 border rounded" />
           </div>
         </div>
       </section>
       
       {/* Section-specific styles */}
-      <section className="mb-6">
+      <section className="pt-4 first:pt-0">
         <h3 className="text-lg font-semibold mb-2">Section Styles</h3>
         
         {/* Header section styles */}
@@ -155,7 +160,7 @@ const CustomizationPanel = () => {
       </section>
       
       {/* Text Formatting section */}
-      <section className="mb-6">
+      <section className="pt-4 first:pt-0">
         <h3 className="text-lg font-semibold mb-2">Text Formatting</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -227,7 +232,7 @@ const CustomizationPanel = () => {
       </section>
       
       {/* Lines section */}
-      <section className="mb-6">
+      <section className="pt-4 first:pt-0">
         <h3 className="text-lg font-semibold mb-2">Lines</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -273,7 +278,7 @@ const CustomizationPanel = () => {
       </section>
       
       {/* Margins section */}
-      <section className="mb-6">
+      <section className="pt-4 first:pt-0">
         <h3 className="text-lg font-semibold mb-2">Margins</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -316,7 +321,7 @@ const CustomizationPanel = () => {
       </section>
       
       {/* Effects section */}
-      <section className="mb-6">
+      <section className="pt-4 first:pt-0">
         <h3 className="text-lg font-semibold mb-2">Effects</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -351,7 +356,7 @@ const CustomizationPanel = () => {
       </section>
       
       {/* Advanced Realism section */}
-      <section className="mb-6">
+      <section className="pt-4 first:pt-0">
         <AdvancedRealismPanel />
       </section>
       

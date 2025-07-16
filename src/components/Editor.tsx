@@ -37,7 +37,7 @@ const withConstraints = (editor: SlateEditor) => {
 const initialValue: Descendant[] = [
   {
     type: 'paragraph',
-    children: [{ text: 'Start writing your notes here...' }],
+    children: [{ text: '' }],
   },
 ];
 
@@ -224,6 +224,7 @@ const Editor = ({
           wordSpacing: `${style.wordSpacing}px`,
           lineHeight: style.lineHeight,
           whiteSpace: "pre-wrap",
+          transform: `translateY(${style.baselineOffset}px)`,
           ...styleOverrides,
         }}
       />

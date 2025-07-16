@@ -11,7 +11,7 @@ type ContentState = {
 };
 
 const emptyInitialValue: Descendant[] = [
-  { type: 'paragraph', children: [{ text: '\u200B' }] }
+  { type: 'paragraph', children: [{ text: '' }] }
 ];
 
 export const useContentStore = create<ContentState>((set) => ({

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, CSSProperties } from 'react';
 import Editor from './Editor';
 import { useStyleStore } from '@/stores/styleStore';
 import { useEffectsStore } from '@/stores/effectsStore';
@@ -21,14 +21,24 @@ const PaperEditor = () => {
   } : {};
 
   // Calculate dimensions based on A4 proportions
-  const paperWidth = 595; // in pixels (210mm at 72dpi)
-  const paperHeight = 842; // in pixels (297mm at 72dpi)
+  const pageSizes = {
+    'A4': { width: 794, height: 1123 },
+    'Letter': { width: 816, height: 1056 },
+    'Legal': { width: 816, height: 1344 },
+    'A5': { width: 559, height: 794 },
+    'Executive': { width: 696, height: 1008 },
+  };
+  const { width: paperWidth, height: paperHeight } = pageSizes[style.pageSize] || pageSizes['A4'];
   
   // Calculate header height (similar to standard notebook headers - around 40-50px)
   const headerHeight = 45;
   
+  const scale = 0.7;
+  const scaledWidth = paperWidth * scale;
+  const scaledHeight = paperHeight * scale;
+
   // Calculate side note width (about 15% of width)
-  const sideNoteWidth = Math.floor(paperWidth * 0.15);
+  const sideNoteWidth = Math.floor(scaledWidth * 0.15);
 
   const lineSpacing = 24; // in pixels, matches globals.css
 
@@ -41,8 +51,8 @@ const PaperEditor = () => {
 
   const paperStyle: React.CSSProperties = {
     backgroundColor: style.paperColor,
-    width: `${paperWidth}px`,
-    height: `${paperHeight}px`,
+    width: `${scaledWidth}px`,
+    height: `${scaledHeight}px`,
     display: 'flex',
     flexDirection: 'column',
     margin: '0 auto',
@@ -145,7 +155,7 @@ const PaperEditor = () => {
           </div>
         )}
         <div className="main-section" style={{ 
-          width: `${paperWidth - sideNoteWidth}px`,
+          width: style.showMargins && style.showSideMargins ? `${scaledWidth - sideNoteWidth}px` : `${scaledWidth}px`,
           position: 'relative',
           backgroundColor: 'transparent',
         }}>
@@ -164,7 +174,11 @@ const PaperEditor = () => {
           />
         </div>
       </div>
-      <div className={`overlay ${effects.shadowEnabled ? 'shadows' : ''} ${effects.scannerEnabled ? 'scanner' : ''}`}></div>
+      <div className={`overlay ${effects.shadowEnabled ? 'shadows' : ''} ${effects.scannerEnabled ? 'scanner' : ''} ${effects.paperGrainEnabled ? 'paper-grain' : ''} ${effects.noiseIntensity > 0 ? 'noise-overlay' : ''} ${effects.lightBarGradient ? 'light-bar-gradient' : ''} ${effects.documentWeathering ? 'weathering-overlay' : ''}`} style={{ 
+  '--paper-grain-opacity': effects.paperGrainIntensity,
+  '--noise-opacity': effects.noiseIntensity,
+  '--weathering-opacity': effects.weatheringIntensity
+} as CSSProperties}></div>
     </div>
   );
 };

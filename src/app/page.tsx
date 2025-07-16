@@ -30,7 +30,7 @@ export default function Home() {
           Clear Output
         </button>
       </div>
-      <div id="output" className="border p-4 bg-gray-50">
+      <div id="output" className="border p-4 bg-gray-50 max-w-4xl mx-auto">
         {/* Generated output will appear here */}
       </div>
     </main>

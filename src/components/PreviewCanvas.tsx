@@ -14,25 +14,25 @@ const PreviewCanvas = () => {
   const effects = useEffectsStore();
 
   // Apply chromatic aberration effect
-  const applyChromaticAberration = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, intensity: number): void => {
+  const applyChromaticAberration = (ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number): void => {
     // Skip if intensity is 0
     if (intensity === 0) return;
     
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, w, h);
     const data = imageData.data;
     const newData = new Uint8ClampedArray(data);
     
     // Calculate offset based on intensity (0-1)
     const offset = Math.ceil(intensity * 3);
     
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        const currentIndex = (y * canvas.width + x) * 4;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const currentIndex = (y * w + x) * 4;
         
         // Red channel shifted left
-        const redIndex = (y * canvas.width + Math.max(0, x - offset)) * 4;
+        const redIndex = (y * w + Math.max(0, x - offset)) * 4;
         // Blue channel shifted right
-        const blueIndex = (y * canvas.width + Math.min(canvas.width - 1, x + offset)) * 4;
+        const blueIndex = (y * w + Math.min(w - 1, x + offset)) * 4;
         
         // Apply the shifted colors
         newData[currentIndex] = data[redIndex];         // Red
@@ -42,8 +42,80 @@ const PreviewCanvas = () => {
     }
     
     // Create new ImageData and put it back
-    const newImageData = new ImageData(newData, canvas.width, canvas.height);
+    const newImageData = new ImageData(newData, w, h);
     ctx.putImageData(newImageData, 0, 0);
+  };
+
+  const applyPaperGrain = (ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number) => {
+    if (intensity === 0) return;
+    const grain = generatePaperTexture(w, h);
+    ctx.save();
+    ctx.globalAlpha = intensity;
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(grain, 0, 0);
+    ctx.restore();
+  };
+
+  const applyNoise = (ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number) => {
+    if (intensity === 0) return;
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const noise = (Math.random() - 0.5) * intensity * 50;
+      data[i] += noise;
+      data[i + 1] += noise;
+      data[i + 2] += noise;
+      data[i] = Math.max(0, Math.min(255, data[i]));
+      data[i + 1] = Math.max(0, Math.min(255, data[i + 1]));
+      data[i + 2] = Math.max(0, Math.min(255, data[i + 2]));
+    }
+    ctx.putImageData(imageData, 0, 0);
+  };
+
+  const applyLightBarGradient = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, 'rgba(255,255,255,0.1)');
+    gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0.1)');
+    ctx.save();
+    ctx.fillStyle = gradient;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  };
+
+  const applyDocumentWeathering = (ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number) => {
+    if (intensity === 0) return;
+    ctx.save();
+    ctx.globalAlpha = intensity;
+    // Yellowing
+    const yellowGradient = ctx.createLinearGradient(0, 0, 0, h);
+    yellowGradient.addColorStop(0, 'rgba(0,0,0,0)');
+    yellowGradient.addColorStop(1, 'rgba(255,255,200,0.3)');
+    ctx.fillStyle = yellowGradient;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.fillRect(0, 0, w, h);
+    // Random stains
+    for (let i = 0; i < 2; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const r = 50 + Math.random() * 100;
+      const stainGradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+      stainGradient.addColorStop(0, 'rgba(139,69,19,0.2)');
+      stainGradient.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = stainGradient;
+      ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+    }
+    // Creases
+    for (let i = 0; i < 3; i++) {
+      ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+      ctx.lineWidth = 1 + Math.random() * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.random() * w, Math.random() * h);
+      ctx.lineTo(Math.random() * w, Math.random() * h);
+      ctx.stroke();
+    }
+    ctx.restore();
   };
 
   // Apply contrast to image data
@@ -90,9 +162,9 @@ const PreviewCanvas = () => {
   };
 
   // Apply light bar gradient effect
-  const applyLightBarGradient = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void => {
+  const applyCanvasLightBarGradient = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     // Create a gradient from top to bottom
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
     gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
     gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
@@ -100,7 +172,7 @@ const PreviewCanvas = () => {
     // Apply the gradient
     ctx.globalCompositeOperation = 'overlay';
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
   };
 
@@ -190,6 +262,8 @@ const PreviewCanvas = () => {
       A4: { width: 794, height: 1123 },
       Letter: { width: 816, height: 1056 },
       Legal: { width: 816, height: 1344 },
+      A5: { width: 559, height: 794 },
+      Executive: { width: 696, height: 1008 },
     };
 
     const pageSize = pageSizes[style.pageSize] || { width: 794, height: 1123 };
@@ -287,6 +361,12 @@ const PreviewCanvas = () => {
       // Skip math for now
     });
 
+    if (effects.chromaticIntensity > 0) applyChromaticAberration(targetCtx, targetW, targetH, effects.chromaticIntensity);
+    if (effects.paperGrainEnabled) applyPaperGrain(targetCtx, targetW, targetH, effects.paperGrainIntensity);
+    if (effects.noiseIntensity > 0) applyNoise(targetCtx, targetW, targetH, effects.noiseIntensity);
+    if (effects.lightBarGradient) applyCanvasLightBarGradient(targetCtx, targetW, targetH);
+    if (effects.documentWeathering) applyDocumentWeathering(targetCtx, targetW, targetH, effects.weatheringIntensity);
+
     if (effects.shadowEnabled && offscreen && offCtx) {
       const shadowColor = `rgba(0, 0, 0, ${effects.shadowOpacity})`;
       ctx.filter = `drop-shadow(${offsetX}px ${offsetY}px ${effects.shadowBlur}px ${shadowColor})`;
@@ -315,7 +395,7 @@ const PreviewCanvas = () => {
       
       // Apply light bar gradient
       if (effects.lightBarGradient) {
-        applyLightBarGradient(ctx, canvas);
+        applyCanvasLightBarGradient(ctx, canvas);
       }
       
       // Apply document weathering
@@ -352,6 +432,8 @@ const PreviewCanvas = () => {
             A4: 'a4',
             Letter: 'letter',
             Legal: 'legal',
+            A5: 'a5',
+            Executive: 'executive',
           };
           const pdfFormat = formatMap[style.pageSize] || 'a4';
           const pdf = new jsPDF({
