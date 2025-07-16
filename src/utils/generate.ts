@@ -53,19 +53,31 @@ export const generateImage = async () => {
   const paper = document.querySelector('.paper') as HTMLElement;
   if (!paper) return;
   
-  // If no pages saved, add current page
-  if (pages.length === 0) {
+  // Set loading state
+  const { setIsGenerating } = useEffectsStore.getState();
+  setIsGenerating(true);
+  
+  try {
+    // Always use a fresh clone of the current paper
+    pages = []; // Clear old pages
     const clonedPaper = paper.cloneNode(true) as HTMLElement;
     pages.push(clonedPaper);
-  }
-  
-  // Get effects settings from the store
-  const effects = useEffectsStore.getState();
-  // Get style settings from the store
-  const style = useStyleStore.getState();
-  
-  // Clear output first
-  clearOutput();
+    
+    // Get effects settings from the store
+    const effects = useEffectsStore.getState();
+    // Get style settings from the store
+    const style = useStyleStore.getState();
+    
+    // Clear output first (remove all children only, don't add text)
+    const output = document.getElementById('output');
+    if (output) {
+      while (output.firstChild) {
+        output.removeChild(output.firstChild);
+      }
+    }
+    
+    // Add small delay to show loading
+    await new Promise(resolve => setTimeout(resolve, 200));
   
   // Process each page
   for (const pagePaper of pages) {
@@ -223,7 +235,16 @@ export const generateImage = async () => {
       // Get canvas context for post-processing
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        // Apply all enabled effects
+        // Create a copy of the canvas data before processing
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (tempCtx) {
+          tempCtx.drawImage(canvas, 0, 0);
+        }
+        
+        // Apply all enabled effects with proper state checking
         try {
           // Apply contrast boost
           if (effects.contrastBoost !== 1.0) {
@@ -232,33 +253,33 @@ export const generateImage = async () => {
             ctx.putImageData(imageData, 0, 0);
           }
           
-          // Apply chromatic aberration
-          if (effects.chromaticAberration) {
+          // Apply chromatic aberration only if enabled
+          if (effects.chromaticAberration && effects.chromaticIntensity > 0) {
             applyChromaticAberration(ctx, canvas, effects.chromaticIntensity);
           }
           
-          // Apply noise
+          // Apply noise only if intensity > 0
           if (effects.noiseIntensity > 0) {
             applyNoiseEffect(ctx, canvas, effects.noiseIntensity);
           }
           
-          // Apply light bar gradient
+          // Apply light bar gradient only if enabled
           if (effects.lightBarGradient) {
             applyLightBarGradient(ctx, canvas);
           }
           
-          // Apply document weathering
-          if (effects.documentWeathering) {
+          // Apply document weathering only if enabled
+          if (effects.documentWeathering && effects.weatheringIntensity > 0) {
             applyWeatheringEffect(ctx, canvas, effects.weatheringIntensity);
           }
           
-          // Apply binding effects
+          // Apply binding effects only if enabled
           if (effects.bindingEffects) {
             applyBindingEffects(ctx, canvas);
           }
 
-          // Apply paper grain
-          if (effects.paperGrainEnabled) {
+          // Apply paper grain only if enabled
+          if (effects.paperGrainEnabled && effects.paperGrainIntensity > 0) {
             applyPaperGrainEffect(ctx, canvas, effects.paperGrainIntensity);
           }
           
@@ -305,6 +326,25 @@ export const generateImage = async () => {
   const outputSection = document.getElementById('output');
   if (outputSection) {
     outputSection.scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  } catch (error) {
+    console.error('Error in generateImage:', error);
+    
+    // Show error notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50';
+    notification.textContent = 'Error generating image. Please try again.';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification);
+      }
+    }, 3000);
+  } finally {
+    // Always clear loading state
+    setIsGenerating(false);
   }
 };
 
@@ -563,5 +603,7 @@ export const clearOutput = () => {
     while (output.firstChild) {
       output.removeChild(output.firstChild);
     }
+    // Add the default text back
+    output.textContent = 'Generated output will appear here';
   }
-}; 
+};

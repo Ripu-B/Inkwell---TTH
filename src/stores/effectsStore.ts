@@ -108,6 +108,10 @@ type EffectsState = {
   setBaselineWobbleIntensity: (intensity: number) => void;
   setFontSizeVariationEnabled: (enabled: boolean) => void;
   setFontSizeVariationIntensity: (intensity: number) => void;
+  
+  // Loading state
+  isGenerating: boolean;
+  setIsGenerating: (isGenerating: boolean) => void;
 };
 
 export const useEffectsStore = create<EffectsState>((set) => ({
@@ -165,6 +169,9 @@ export const useEffectsStore = create<EffectsState>((set) => ({
   fontSizeVariationEnabled: false,
   fontSizeVariationIntensity: 0.1,
   
+  // Loading state default
+  isGenerating: false,
+  
   // Shadow setters
   setShadowEnabled: (shadowEnabled) => set({ shadowEnabled }),
   setShadowAngle: (shadowAngle) => set({ shadowAngle }),
@@ -218,4 +225,7 @@ export const useEffectsStore = create<EffectsState>((set) => ({
   setBaselineWobbleIntensity: (baselineWobbleIntensity) => set({ baselineWobbleIntensity }),
   setFontSizeVariationEnabled: (fontSizeVariationEnabled) => set({ fontSizeVariationEnabled }),
   setFontSizeVariationIntensity: (fontSizeVariationIntensity) => set({ fontSizeVariationIntensity }),
+  
+  // Loading state setter
+  setIsGenerating: (isGenerating) => set({ isGenerating }),
 })); 

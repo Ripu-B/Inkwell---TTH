@@ -5,8 +5,10 @@ import CustomizationPanel from '@/components/CustomizationPanel';
 import PluginManager from '@/components/PluginManager';
 import PaperEditor from '@/components/PaperEditor';
 import { generateImage, downloadAsPDF, clearOutput } from '@/utils/generate';
+import { useEffectsStore } from '@/stores/effectsStore';
 
 export default function Home() {
+  const { isGenerating } = useEffectsStore();
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header with Generate Button */}
@@ -16,8 +18,15 @@ export default function Home() {
             INKWELL
           </h1>
           <p className="text-gray-600 text-sm hidden md:block">The most advanced text to handwriting tool</p>
-          <button onClick={generateImage} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-md">
-            Generate Image
+          <button 
+            onClick={generateImage} 
+            disabled={isGenerating}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          >
+            {isGenerating && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            )}
+            <span>{isGenerating ? 'Generating...' : 'Generate Image'}</span>
           </button>
         </div>
       </header>
@@ -36,10 +45,18 @@ export default function Home() {
         
         {/* Action Buttons */}
         <div className="flex space-x-4 mb-4">
-          <button onClick={downloadAsPDF} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+          <button 
+            onClick={downloadAsPDF} 
+            disabled={isGenerating}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Download PDF
           </button>
-          <button onClick={clearOutput} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+          <button 
+            onClick={clearOutput} 
+            disabled={isGenerating}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Clear Output
           </button>
         </div>

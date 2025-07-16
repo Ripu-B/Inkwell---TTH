@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useContentStore } from '@/stores/contentStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useEffectsStore } from '@/stores/effectsStore';
@@ -12,6 +12,8 @@ const PreviewCanvas = () => {
   const { mainContent } = useContentStore();
   const style = useStyleStore();
   const effects = useEffectsStore();
+  const [isRendering, setIsRendering] = useState(false);
+  const [renderKey, setRenderKey] = useState(0);
 
   // Apply chromatic aberration effect
   const applyChromaticAberration = (ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number): void => {
@@ -252,11 +254,17 @@ const PreviewCanvas = () => {
     }
   };
 
-  useEffect(() => {
+  const renderCanvas = useCallback(async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    
+    setIsRendering(true);
+    
+    try {
+      // Small delay to show loading animation
+      await new Promise(resolve => setTimeout(resolve, 100));
 
     const pageSizes: { [key: string]: { width: number; height: number } } = {
       A4: { width: 794, height: 1123 },
@@ -410,11 +418,27 @@ const PreviewCanvas = () => {
     } catch (error) {
       console.error('Failed to apply effects:', error);
     }
+    } finally {
+      setIsRendering(false);
+    }
   }, [mainContent, style, effects]);
+  
+  useEffect(() => {
+    setRenderKey(prev => prev + 1);
+    renderCanvas();
+  }, [mainContent, style, effects, renderCanvas]);
 
   return (
-    <div>
-      <canvas ref={canvasRef} className="border shadow-lg" />
+    <div className="relative">
+      <canvas ref={canvasRef} className="border shadow-lg" key={renderKey} />
+      {isRendering && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded">
+          <div className="bg-white p-4 rounded-lg shadow-lg flex items-center space-x-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <span className="text-gray-700 font-medium">Rendering...</span>
+          </div>
+        </div>
+      )}
       <button
         onClick={() => {
           const link = document.createElement('a');

@@ -70,16 +70,32 @@ const Editor = ({
   styleOverrides = {},
   placeholder = 'Enter your text here...',
 }: EditorProps) => {
-  const editor = useMemo(() => withConstraints(withHistory(withReact(createEditor()))), []);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
+  const [internalContent, setInternalContent] = useState<Descendant[]>(content);
+  
+  const editor = useMemo(() => withConstraints(withHistory(withReact(createEditor()))), [editorKey]);
   const style = useStyleStore();
   const formatting = useFormattingStore();
   const effects = useEffectsStore();
-  const [isMounted, setIsMounted] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+  
+  // Update editor when content prop changes
+  useEffect(() => {
+    if (JSON.stringify(content) !== JSON.stringify(internalContent)) {
+      setInternalContent(content);
+      setEditorKey(prev => prev + 1); // Force re-mount
+    }
+  }, [content, internalContent]);
+  
+  const handleChange = useCallback((newValue: Descendant[]) => {
+    setInternalContent(newValue);
+    setContent(newValue);
+  }, [setContent]);
 
   const renderElement = useCallback((props: RenderElementProps) => {
     switch (props.element.type) {
@@ -206,7 +222,7 @@ const Editor = ({
   }, [editor]);
 
   const editorContent = (
-    <Slate editor={editor} initialValue={content} onValueChange={(newValue) => setContent(newValue as Descendant[])}>
+    <Slate key={editorKey} editor={editor} initialValue={internalContent} onValueChange={handleChange}>
       {showToolbar && <SlateToolbar />}
       <Editable
         renderElement={renderElement}
