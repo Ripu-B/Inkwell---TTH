@@ -77,12 +77,30 @@ const PaperEditor = () => {
   const mainText = extractTextContent(mainContent);
 
   return (
-    <div
-      ref={paperRef}
-      className={paperClasses}
-      style={paperStyle}
-      data-text={mainText}
-    >
+    <div>
+      {/* Toggle button for markup input */}
+      <button
+        onClick={() => setShowMarkupInput(!showMarkupInput)}
+        style={{
+          marginBottom: '10px',
+          padding: '8px 16px',
+          fontSize: '14px',
+          backgroundColor: showMarkupInput ? '#4a5568' : '#718096',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
+      >
+        {showMarkupInput ? 'Switch to Editor' : 'Use Markup'}
+      </button>
+      
+      <div
+        ref={paperRef}
+        className={paperClasses}
+        style={paperStyle}
+        data-text={mainText}
+      >
       {/* Realism Effect Layers */}
       {effects.paperGrainEnabled && <div className="paper-grain" style={{ opacity: effects.paperGrainIntensity }} />}
       {effects.documentWeathering && <div className="document-weathering" style={{ opacity: effects.weatheringIntensity }} />}
@@ -175,25 +193,6 @@ const PaperEditor = () => {
           position: 'relative',
           backgroundColor: 'transparent',
         }}>
-          {/* Toggle button for markup input */}
-          <button
-            onClick={() => setShowMarkupInput(!showMarkupInput)}
-            style={{
-              position: 'absolute',
-              top: '5px',
-              right: '5px',
-              zIndex: 10,
-              padding: '4px 8px',
-              fontSize: '12px',
-              backgroundColor: showMarkupInput ? '#4a5568' : '#718096',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            {showMarkupInput ? 'Switch to Editor' : 'Use Markup'}
-          </button>
           
           {showMarkupInput ? (
             <textarea
@@ -244,6 +243,7 @@ const PaperEditor = () => {
   '--noise-opacity': effects.noiseIntensity,
   '--weathering-opacity': effects.weatheringIntensity
 } as CSSProperties}></div>
+      </div>
     </div>
   );
 };
