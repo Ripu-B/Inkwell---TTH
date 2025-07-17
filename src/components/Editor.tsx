@@ -24,13 +24,24 @@ const withConstraints = (editor: SlateEditor) => {
         Transforms.insertNodes(editor, [{ type: 'paragraph', children: [{ text: '\u200B' }] }] as Node[]);
       }
       for (const [child, childPath] of Node.children(editor, [])) {
-        if (Element.isElement(child) && !editor.isInline(child) && child.type !== 'paragraph') {
+        if (Element.isElement(child) && !editor.isInline(child) && 
+            !['paragraph', 'math', 'heading'].includes(child.type)) {
           Transforms.setNodes(editor, { type: 'paragraph' }, { at: childPath });
         }
       }
     }
     return normalizeNode(entry);
   };
+  return editor;
+};
+
+const withInlines = (editor: SlateEditor) => {
+  const { isInline } = editor;
+  editor.isInline = (element) => 
+    (element.type === 'math' && element.inline) || 
+    element.type === 'indented' || 
+    element.type === 'centered' || 
+    isInline(element);
   return editor;
 };
 
@@ -75,7 +86,10 @@ const Editor = ({
   const [editorKey, setEditorKey] = useState(0);
   const [internalContent, setInternalContent] = useState<Descendant[]>(content);
   
-  const editor = useMemo(() => withConstraints(withHistory(withReact(createEditor()))), [editorKey]);
+  const editor = useMemo(() => 
+    withInlines(withConstraints(withHistory(withReact(createEditor())))), 
+    [editorKey]
+  );
   const style = useStyleStore();
   const formatting = useFormattingStore();
   const effects = useEffectsStore();
@@ -98,10 +112,19 @@ const Editor = ({
   }, [setContent]);
 
   const renderElement = useCallback((props: RenderElementProps) => {
+    let elStyle: React.CSSProperties = { lineHeight: style.lineHeight };
+    if (props.element.marginLeft) elStyle.paddingLeft = `${props.element.marginLeft}px`;
+    if (props.element.marginTop) elStyle.marginTop = `${props.element.marginTop}px`;
+    if (props.element.color) elStyle.color = props.element.color;
+    if (props.element.fontSize) elStyle.fontSize = `${props.element.fontSize}px`;
+    if (props.element.align === 'center') elStyle.textAlign = 'center';
+
     switch (props.element.type) {
+      case 'heading':
+        return <h2 {...props.attributes} style={elStyle}>{props.children}</h2>;
       case 'math':
         return (
-          <span {...props.attributes} style={{ margin: `0 ${style.mathSpacing}px` }}>
+          <span {...props.attributes} style={{ ...elStyle, margin: `0 ${style.mathSpacing}px` }}>
             {props.element.inline ? (
               <InlineMath math={props.element.formula || ''} />
             ) : (
@@ -110,13 +133,18 @@ const Editor = ({
             {props.children}
           </span>
         );
+      case 'indented':
+        return <span {...props.attributes} style={{ ...elStyle, paddingLeft: '20px' }}>{props.children}</span>;
+      case 'centered':
+        return <span {...props.attributes} style={{ ...elStyle, textAlign: 'center', display: 'inline-block' }}>{props.children}</span>;
       default:
-        return <p {...props.attributes} style={{ lineHeight: style.lineHeight }}>{props.children}</p>;
+        return <p {...props.attributes} style={elStyle}>{props.children}</p>;
     }
   }, [style.mathSpacing, style.lineHeight]);
 
   const renderLeaf = useCallback((props: RenderLeafProps) => {
     let { children } = props;
+    // Existing formatting
     if (formatting.bold || props.leaf.bold) {
       children = <strong>{children}</strong>;
     }
@@ -132,7 +160,17 @@ const Editor = ({
     if (formatting.subscript || props.leaf.subscript) {
       children = <sub style={{ fontSize: `${style.superscriptSize}em` }}>{children}</sub>;
     }
-    
+    // New formatting
+    if (props.leaf.strike) {
+      children = <s>{children}</s>;
+    }
+    if (props.leaf.small) {
+      children = <small>{children}</small>;
+    }
+    if (props.leaf.mark) {
+      children = <mark>{children}</mark>;
+    }
+
     const text = props.leaf.text;
     
     if (isMounted && !isFocused && (effects.inkFlowVariation || effects.fontSizeVariationEnabled || effects.baselineWobbleEnabled)) {
@@ -172,7 +210,12 @@ const Editor = ({
       );
     }
     
-    return <span {...props.attributes}>{children}</span>;
+    // For focused or no effects, add styles to the span
+    const leafStyle: React.CSSProperties = {};
+    if (props.leaf.color) leafStyle.color = props.leaf.color;
+    if (props.leaf.fontSize) leafStyle.fontSize = `${props.leaf.fontSize}px`;
+    
+    return <span {...props.attributes} style={leafStyle}>{children}</span>;
   }, [style, formatting, effects, isMounted, isFocused]);
 
   const isMarkActive = (format: string) => {

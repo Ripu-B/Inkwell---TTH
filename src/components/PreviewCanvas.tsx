@@ -6,6 +6,9 @@ import { useStyleStore } from '@/stores/styleStore';
 import { useEffectsStore } from '@/stores/effectsStore';
 import { generatePaperTexture } from '@/utils/paperTexture';
 import jsPDF from 'jspdf';
+import katex from 'katex';
+import html2canvas from 'html2canvas';
+import { CustomText } from '@/types/slate.d';
 
 const PreviewCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -344,30 +347,78 @@ const PreviewCanvas = () => {
     let y = style.margins.top + style.fontSize;
     const textWidth = targetW - style.margins.left - style.margins.right;
 
-    mainContent.forEach((node: any) => {
-      if (node.type === 'paragraph') {
-        let line = '';
-        node.children.forEach((text: any) => {
-          text.text.split(' ').forEach((word: string) => {
+    // Update the main content rendering loop to handle math and new types
+    // Around line 345 or where mainContent.forEach is
+    // Replace the forEach with async for-of since html2canvas is async
+    for (const node of mainContent) {
+      if (!('type' in node)) continue; // Skip if not element
+      let elementFontSize = style.fontSize;
+      let elementColor = style.inkColor;
+      let currentX = style.margins.left;
+      if ('marginLeft' in node && node.marginLeft) currentX += node.marginLeft;
+      if ('marginTop' in node && node.marginTop) y += node.marginTop;
+      if ('color' in node && node.color) elementColor = node.color;
+      if ('fontSize' in node && node.fontSize) elementFontSize = node.fontSize;
+
+      if (node.type === 'paragraph' || node.type === 'heading') {
+        if (node.type === 'heading') {
+          elementFontSize *= 1.5;
+        }
+        if (!('children' in node)) continue;
+        for (const leaf of node.children) {
+          if (!('text' in leaf)) continue;
+          let leafFontSize = (leaf as CustomText).fontSize || elementFontSize;
+          let leafColor = (leaf as CustomText).color || elementColor;
+          let isBold = (leaf as CustomText).bold || (node.type === 'heading');
+          let isItalic = (leaf as CustomText).italic || false;
+          let isUnderline = (leaf as CustomText).underline || false;
+          let isStrike = (leaf as CustomText).strike || false;
+          let isMark = (leaf as CustomText).mark || false;
+          let isSup = (leaf as CustomText).superscript || false;
+          let isSub = (leaf as CustomText).subscript || false;
+          if ((leaf as CustomText).small) leafFontSize *= 0.8;
+
+          let line = '';
+          (leaf as CustomText).text.split(' ').forEach((word: string) => {
             const testLine = line + word + ' ';
+            targetCtx.font = `${isBold ? 700 : 400} ${isItalic ? 'italic' : ''} ${leafFontSize}px ${style.fontFamily}`;
             const metrics = targetCtx.measureText(testLine);
             if (metrics.width > textWidth) {
-              drawLine(targetCtx, line, style.margins.left, y, effects, style.fontSize);
+              drawLine(targetCtx, line, currentX, y, effects, leafFontSize, leafColor, isBold, isItalic, isUnderline, isStrike, isMark, isSup, isSub);
               line = word + ' ';
-              y += style.fontSize * 1.2 + style.wordSpacing;
+              y += leafFontSize * 1.2 + style.wordSpacing;
             } else {
               line = testLine;
             }
           });
-        });
-        if (line) {
-          drawLine(targetCtx, line, style.margins.left, y, effects, style.fontSize);
-          y += style.fontSize * 1.2 + style.wordSpacing;
+          if (line) {
+            drawLine(targetCtx, line, currentX, y, effects, leafFontSize, leafColor, isBold, isItalic, isUnderline, isStrike, isMark, isSup, isSub);
+            y += leafFontSize * 1.2 + style.wordSpacing;
+          }
+          y += style.letterSpacing;
         }
-        y += style.letterSpacing;
+      } else if (node.type === 'math') {
+        const div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.style.left = '-9999px';
+        div.style.color = elementColor;
+        div.style.fontSize = `${elementFontSize}px`;
+        document.body.appendChild(div);
+        const html = katex.renderToString(node.formula || '', { displayMode: !node.inline, throwOnError: false });
+        div.innerHTML = html;
+        const scale = 2;
+        const mathCanvas = await html2canvas(div, { scale, backgroundColor: null });
+        document.body.removeChild(div);
+        const imgWidth = mathCanvas.width / scale;
+        const imgHeight = mathCanvas.height / scale;
+        let drawX = currentX;
+        if (node.align === 'center') {
+          drawX = (targetW - style.margins.left - style.margins.right - imgWidth) / 2 + style.margins.left;
+        }
+        targetCtx.drawImage(mathCanvas, drawX, y, imgWidth, imgHeight);
+        y += imgHeight + style.wordSpacing;
       }
-      // Skip math for now
-    });
+    }
 
     if (effects.chromaticIntensity > 0) applyChromaticAberration(targetCtx, targetW, targetH, effects.chromaticIntensity);
     if (effects.paperGrainEnabled) applyPaperGrain(targetCtx, targetW, targetH, effects.paperGrainIntensity);
@@ -483,15 +534,44 @@ function drawLine(
   x: number, 
   y: number, 
   effects: any, 
-  fontSize: number
+  fontSize: number,
+  color: string,
+  bold: boolean,
+  italic: boolean,
+  underline: boolean,
+  strike: boolean,
+  mark: boolean,
+  sup: boolean,
+  sub: boolean
 ) {
   let currentX = x;
+  targetCtx.fillStyle = color;
+  const lineWidth = targetCtx.measureText(line).width;
+  const lineHeight = fontSize * 1.2;
+
+  // Handle mark (highlight)
+  if (mark) {
+    targetCtx.fillStyle = 'yellow'; // or some highlight color
+    targetCtx.fillRect(currentX, y - fontSize, lineWidth, lineHeight);
+    targetCtx.fillStyle = color;
+  }
+
   for (const [i, char] of line.split('').entries()) {
     targetCtx.save();
     
+    let adjustedY = y;
+    let adjustedSize = fontSize;
+    if (sup) {
+      adjustedY -= fontSize * 0.3;
+      adjustedSize *= 0.7;
+    } else if (sub) {
+      adjustedY += fontSize * 0.3;
+      adjustedSize *= 0.7;
+    }
+    
     // Calculate baseline wobble
     const wobble = effects.baselineWobbleEnabled ? Math.sin(i * 0.5) * effects.baselineWobbleIntensity * 5 : 0;
-    targetCtx.translate(currentX, y + wobble);
+    targetCtx.translate(currentX, adjustedY + wobble);
     
     if (effects.handwritingRandomization) {
       const rotation = (Math.random() - 0.5) * 0.05;
@@ -506,9 +586,10 @@ function drawLine(
     if (effects.penPressureVariation) {
       const pressure = 1 - Math.random() * effects.penPressureIntensity * 0.3;
       targetCtx.globalAlpha = 0.7 + pressure * 0.3;
-      
-      // Simulate pen pressure by varying the font weight
-      const weight = Math.floor(400 + pressure * 200);
+      let weight = bold ? 700 : 400;
+      if (effects.penPressureVariationIntensity > 0) {
+        weight = Math.floor(weight + (pressure - 0.5) * 200);
+      }
       const fontParts = targetCtx.font.split(' ');
       if (fontParts.length > 1) {
         fontParts[0] = `${weight}`;
@@ -524,12 +605,30 @@ function drawLine(
     // Apply font size variation
     if (effects.fontSizeVariationEnabled && Math.random() < 0.1) {
       const variation = (Math.random() - 0.5) * effects.fontSizeVariationIntensity * 0.5;
-      targetCtx.font = `${fontSize * (1 + variation)}px ${targetCtx.font.split('px ')[1]}`;
+      targetCtx.font = `${bold ? 'bold' : ''} ${italic ? 'italic' : ''} ${adjustedSize * (1 + variation)}px ${targetCtx.font.split('px ')[1]}`;
     }
     
     targetCtx.fillText(char, 0, 0);
     targetCtx.restore();
     currentX += targetCtx.measureText(char).width;
+  }
+
+  // Handle underline and strike
+  if (underline) {
+    targetCtx.beginPath();
+    targetCtx.moveTo(x, y + 2);
+    targetCtx.lineTo(x + lineWidth, y + 2);
+    targetCtx.strokeStyle = color;
+    targetCtx.lineWidth = 1;
+    targetCtx.stroke();
+  }
+  if (strike) {
+    targetCtx.beginPath();
+    targetCtx.moveTo(x, y - fontSize / 3);
+    targetCtx.lineTo(x + lineWidth, y - fontSize / 3);
+    targetCtx.strokeStyle = color;
+    targetCtx.lineWidth = 1;
+    targetCtx.stroke();
   }
 }
 

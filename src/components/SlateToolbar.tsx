@@ -2,6 +2,7 @@
 import React from 'react';
 import { useSlate, ReactEditor } from 'slate-react';
 import { Editor, Transforms, Element } from 'slate';
+import { parseMarkup } from '../utils/markupParser';
 
 const isMarkActive = (editor: Editor, format: string) => {
   const marks = Editor.marks(editor);
@@ -62,6 +63,26 @@ const MathButton = () => {
     )
 }
 
+const InsertMarkupButton = () => {
+  const editor = useSlate();
+  return (
+    <button
+      className="p-2 rounded bg-gray-100"
+      onMouseDown={(event) => {
+        event.preventDefault();
+        const markup = prompt('Enter markup syntax:');
+        if (markup) {
+          const parsed = parseMarkup(markup);
+          // @ts-ignore
+          Transforms.insertNodes(editor, parsed as unknown as Node[]);
+        }
+      }}
+    >
+      Markup
+    </button>
+  );
+};
+
 const SlateToolbar = () => {
   return (
     <div className="flex items-center gap-2 p-2 bg-white rounded-t-lg border-b">
@@ -71,6 +92,7 @@ const SlateToolbar = () => {
       <MarkButton format="superscript" icon="x²" />
       <MarkButton format="subscript" icon="x₂" />
       <MathButton />
+      <InsertMarkupButton />
     </div>
   );
 };
