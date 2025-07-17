@@ -1,17 +1,20 @@
 'use client';
 
-import React, { useRef, CSSProperties } from 'react';
-import { Descendant } from 'slate';
+import React, { useRef, CSSProperties, useState } from 'react';
+import { Descendant, Node } from 'slate';
 import Editor from './Editor';
 import { useStyleStore } from '@/stores/styleStore';
 import { useEffectsStore } from '@/stores/effectsStore';
 import { useContentStore } from '@/stores/contentStore';
+import { parseMarkup } from '@/utils/markupParser';
 
 const PaperEditor = () => {
   const paperRef = useRef<HTMLDivElement>(null);
   const style = useStyleStore();
   const effects = useEffectsStore();
   const { headerContent, setHeaderContent, sideContent, setSideContent, mainContent, setMainContent } = useContentStore();
+  const [showMarkupInput, setShowMarkupInput] = useState(false);
+  const [markupText, setMarkupText] = useState('');
 
   // Calculate shadow properties
   const rad = effects.shadowAngle * Math.PI / 180;
@@ -172,19 +175,68 @@ const PaperEditor = () => {
           position: 'relative',
           backgroundColor: 'transparent',
         }}>
-          <Editor
-            content={mainContent}
-            setContent={setMainContent}
-            showToolbar={false}
-            noContainer={true}
-            styleOverrides={{
-              fontSize: `${style.mainContentFontSize}px`,
-              color: style.mainContentInkColor,
-              padding: '0 15px',
-              lineHeight: `${lineSpacing}px`,
+          {/* Toggle button for markup input */}
+          <button
+            onClick={() => setShowMarkupInput(!showMarkupInput)}
+            style={{
+              position: 'absolute',
+              top: '5px',
+              right: '5px',
+              zIndex: 10,
+              padding: '4px 8px',
+              fontSize: '12px',
+              backgroundColor: showMarkupInput ? '#4a5568' : '#718096',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
             }}
-            placeholder="Start writing notes here..."
-          />
+          >
+            {showMarkupInput ? 'Switch to Editor' : 'Use Markup'}
+          </button>
+          
+          {showMarkupInput ? (
+            <textarea
+              value={markupText}
+              onChange={(e) => {
+                setMarkupText(e.target.value);
+                try {
+                  const parsed = parseMarkup(e.target.value);
+                  setMainContent(parsed);
+                } catch (error) {
+                  console.error('Markup parsing error:', error);
+                }
+              }}
+              style={{
+                width: '100%',
+                height: '100%',
+                fontSize: `${style.mainContentFontSize}px`,
+                color: style.mainContentInkColor,
+                padding: '0 15px',
+                lineHeight: `${lineSpacing}px`,
+                backgroundColor: 'transparent',
+                border: 'none',
+                outline: 'none',
+                resize: 'none',
+                fontFamily: 'monospace',
+              }}
+              placeholder="Enter markup text here... (e.g., {_heading: Title, color: brown})"
+            />
+          ) : (
+            <Editor
+              content={mainContent}
+              setContent={setMainContent}
+              showToolbar={false}
+              noContainer={true}
+              styleOverrides={{
+                fontSize: `${style.mainContentFontSize}px`,
+                color: style.mainContentInkColor,
+                padding: '0 15px',
+                lineHeight: `${lineSpacing}px`,
+              }}
+              placeholder="Start writing notes here..."
+            />
+          )}
         </div>
       </div>
       <div className={`overlay ${effects.shadowEnabled ? 'shadows' : ''} ${effects.scannerEnabled ? 'scanner' : ''} ${effects.paperGrainEnabled ? 'paper-grain' : ''} ${effects.noiseIntensity > 0 ? 'noise-overlay' : ''} ${effects.lightBarGradient ? 'light-bar-gradient' : ''} ${effects.documentWeathering ? 'weathering-overlay' : ''}`} style={{ 
