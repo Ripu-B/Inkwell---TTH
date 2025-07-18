@@ -13,23 +13,53 @@ import 'katex/dist/katex.min.css';
 import SlateToolbar from './SlateToolbar';
 
 import { CustomElement, CustomText } from '@/types/slate.d';
-import { Editor as SlateEditor, Node, Path, Element } from 'slate';
+import { Editor as SlateEditor, Node, Path, Element, Text } from 'slate';
 
 const withConstraints = (editor: SlateEditor) => {
   const { normalizeNode } = editor;
   editor.normalizeNode = (entry: [Node, Path]) => {
     const [node, path] = entry;
+    
+    // Ensure root level has at least one child
     if (path.length === 0) {
       if (editor.children.length === 0) {
         Transforms.insertNodes(editor, [{ type: 'paragraph', children: [{ text: '\u200B' }] }] as Node[]);
+        return;
       }
+      // Ensure all top-level children are block elements
       for (const [child, childPath] of Node.children(editor, [])) {
         if (Element.isElement(child) && !editor.isInline(child) && 
-            !['paragraph', 'math', 'heading'].includes(child.type)) {
+            !['paragraph', 'math', 'heading', 'indented', 'centered'].includes(child.type)) {
           Transforms.setNodes(editor, { type: 'paragraph' }, { at: childPath });
+          return;
         }
       }
     }
+    
+    // Prevent invalid nesting by ensuring block elements are only at root level
+    if (Element.isElement(node) && path.length > 1) {
+      const parent = Node.parent(editor, path);
+      if (Element.isElement(parent)) {
+        // Block elements should not be nested inside other block elements
+        if (['heading', 'math', 'paragraph'].includes(node.type) && 
+            ['paragraph', 'heading', 'math'].includes(parent.type)) {
+          // Split the parent and move this node to root level
+          Transforms.liftNodes(editor, { at: path });
+          return;
+        }
+      }
+    }
+    
+    // Ensure text nodes are properly wrapped
+    if (Element.isElement(node) && path.length === 1) {
+      for (const [child, childPath] of Node.children(editor, path)) {
+        if (!Element.isElement(child) && !Text.isText(child)) {
+          Transforms.removeNodes(editor, { at: childPath });
+          return;
+        }
+      }
+    }
+    
     return normalizeNode(entry);
   };
   return editor;
@@ -37,11 +67,24 @@ const withConstraints = (editor: SlateEditor) => {
 
 const withInlines = (editor: SlateEditor) => {
   const { isInline } = editor;
-  editor.isInline = (element) => 
-    (element.type === 'math' && element.inline) || 
-    element.type === 'indented' || 
-    element.type === 'centered' || 
-    isInline(element);
+  editor.isInline = (element) => {
+    // Only inline math should be treated as inline
+    if (element.type === 'math' && element.inline) {
+      return true;
+    }
+    // Block elements should never be inline
+    if (['heading', 'math', 'paragraph'].includes(element.type)) {
+      return false;
+    }
+    // Other custom elements like indented and centered can be inline
+    return element.type === 'indented' || element.type === 'centered' || isInline(element);
+  };
+  return editor;
+};
+
+const withVoids = (editor: SlateEditor) => {
+  const { isVoid } = editor;
+  editor.isVoid = (element) => element.type === 'math' || isVoid(element);
   return editor;
 };
 
@@ -87,7 +130,7 @@ const Editor = ({
   const [internalContent, setInternalContent] = useState<Descendant[]>(content);
   
   const editor = useMemo(() => 
-    withInlines(withConstraints(withHistory(withReact(createEditor())))), 
+    withVoids(withInlines(withConstraints(withHistory(withReact(createEditor()))))), 
     [editorKey]
   );
   const style = useStyleStore();
@@ -123,24 +166,34 @@ const Editor = ({
       case 'heading':
         return <h2 {...props.attributes} style={elStyle}>{props.children}</h2>;
       case 'math':
+        const mathStyle = {
+          ...elStyle,
+          margin: `0 ${style.mathSpacing}px`,
+          display: props.element.inline ? 'inline-block' : 'block',
+          fontFamily: style.fontFamily,
+          fontSize: `${style.fontSize * 1.5}px`,  // Further increased size
+          color: style.inkColor,
+          lineHeight: props.element.inline ? style.lineHeight : 2.0  // Increased spacing for block math
+        };
+        const Wrapper = props.element.inline ? 'span' : 'div';
         return (
-          <span {...props.attributes} style={{ ...elStyle, margin: `0 ${style.mathSpacing}px` }}>
+          <Wrapper {...props.attributes} style={mathStyle} className="math-container">
             {props.element.inline ? (
               <InlineMath math={props.element.formula || ''} />
             ) : (
               <BlockMath math={props.element.formula || ''} />
             )}
             {props.children}
-          </span>
+          </Wrapper>
         );
       case 'indented':
-        return <span {...props.attributes} style={{ ...elStyle, paddingLeft: '20px' }}>{props.children}</span>;
+        return <div {...props.attributes} style={{ ...elStyle, paddingLeft: '20px' }}>{props.children}</div>;
       case 'centered':
-        return <span {...props.attributes} style={{ ...elStyle, textAlign: 'center', display: 'inline-block' }}>{props.children}</span>;
+        return <div {...props.attributes} style={{ ...elStyle, textAlign: 'center' }}>{props.children}</div>;
       default:
         return <p {...props.attributes} style={elStyle}>{props.children}</p>;
     }
-  }, [style.mathSpacing, style.lineHeight]);
+  }, [style.mathSpacing, style.lineHeight, style.fontFamily, style.fontSize, style.inkColor]);
 
   const renderLeaf = useCallback((props: RenderLeafProps) => {
     let { children } = props;

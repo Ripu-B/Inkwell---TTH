@@ -39,7 +39,7 @@ const MathComponent: React.FC<MathComponentProps> = ({ latex, displayMode = fals
         setRendered(`Error: ${latex}`);
       }
     }
-  }, [katex, latex, displayMode]);
+  }, [katex, latex, displayMode, style.fontFamily, style.fontSize, style.inkColor]);
 
   if (!katex) {
     return <span className={className}>Loading math...</span>;

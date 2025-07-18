@@ -257,6 +257,36 @@ const PreviewCanvas = () => {
     }
   };
 
+  const applyMathVariations = (element: HTMLElement, effects: any) => {
+    if (element.children.length === 0 && element.textContent && element.textContent.length === 1) {
+      const charStyle: React.CSSProperties = {};
+      let transform = '';
+
+      if (effects.inkFlowVariation) {
+        const variation = (Math.random() - 0.5) * effects.inkFlowIntensity * 0.04; // milder for math
+        const rotation = (Math.random() - 0.5) * effects.inkFlowIntensity * 1.5; // milder
+        transform += `scale(${1 + variation}) rotate(${rotation}deg)`;
+      }
+
+      if (effects.baselineWobbleEnabled) {
+        const wobble = Math.sin(Math.random() * Math.PI) * effects.baselineWobbleIntensity;
+        transform += ` translateY(${wobble}px)`;
+      }
+
+      if (transform) {
+        element.style.transform = transform;
+        element.style.display = 'inline-block';
+      }
+
+      if (effects.fontSizeVariationEnabled && Math.random() < 0.1) {
+        const variation = (Math.random() - 0.5) * effects.fontSizeVariationIntensity * 0.2; // milder
+        element.style.fontSize = `${parseFloat(element.style.fontSize || '16') * (1 + variation)}px`;
+      }
+    } else {
+      Array.from(element.children).forEach(child => applyMathVariations(child as HTMLElement, effects));
+    }
+  };
+
   const renderCanvas = useCallback(async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -402,21 +432,64 @@ const PreviewCanvas = () => {
         div.style.position = 'absolute';
         div.style.left = '-9999px';
         div.style.color = elementColor;
-        div.style.fontSize = `${elementFontSize}px`;
+        div.style.fontSize = `${elementFontSize * 1.5}px`;  // Further increased size
+        div.style.fontFamily = style.fontFamily;
+        div.className = 'math-container';
         document.body.appendChild(div);
-        const html = katex.renderToString(node.formula || '', { displayMode: !node.inline, throwOnError: false });
-        div.innerHTML = html;
-        const scale = 2;
-        const mathCanvas = await html2canvas(div, { scale, backgroundColor: null });
-        document.body.removeChild(div);
-        const imgWidth = mathCanvas.width / scale;
-        const imgHeight = mathCanvas.height / scale;
-        let drawX = currentX;
-        if (node.align === 'center') {
-          drawX = (targetW - style.margins.left - style.margins.right - imgWidth) / 2 + style.margins.left;
+        
+        try {
+          const html = katex.renderToString(node.formula || '', { 
+            displayMode: !node.inline, 
+            throwOnError: false,
+            strict: false
+          });
+          div.innerHTML = html;
+          
+          // Apply custom font to all katex elements
+          const katexElements = div.querySelectorAll('.katex, .katex *');
+          katexElements.forEach(el => {
+            (el as HTMLElement).style.fontFamily = style.fontFamily;
+            (el as HTMLElement).style.color = elementColor;
+          });
+
+          // Add this: apply variations if effects are enabled
+          applyMathVariations(div, effects);
+          
+          const scale = 2;
+          const mathCanvas = await html2canvas(div, { 
+            scale, 
+            backgroundColor: null,
+            useCORS: true,
+            allowTaint: true
+          });
+          
+          let imgWidth = mathCanvas.width / scale;
+          let imgHeight = mathCanvas.height / scale;
+          let scaleFactor = 1;
+          if (!node.inline && imgWidth > textWidth * 1.2) {  // Allow 20% overflow before scaling
+            scaleFactor = (textWidth * 1.2) / imgWidth;
+            imgWidth *= scaleFactor;
+            imgHeight *= scaleFactor;
+          }
+
+          let drawX = currentX;
+          if (node.align === 'center') {
+            drawX = (targetW - style.margins.left - style.margins.right - imgWidth) / 2 + style.margins.left;
+          }
+          targetCtx.drawImage(mathCanvas, drawX, y, imgWidth, imgHeight);
+
+          // Add extra spacing for block math
+          y += imgHeight + style.wordSpacing * 2.0;  // Further increased spacing
+        } catch (error) {
+          console.warn(`Falling back to plain text for math rendering. Check LaTeX syntax: ${node.formula || ''}`);
+          // Fallback to plain text if math rendering fails
+          targetCtx.fillStyle = elementColor;
+          targetCtx.font = `${elementFontSize}px ${style.fontFamily}`;
+          targetCtx.fillText(node.formula || '', currentX, y);
+          y += elementFontSize + style.wordSpacing;
+        } finally {
+          document.body.removeChild(div);
         }
-        targetCtx.drawImage(mathCanvas, drawX, y, imgWidth, imgHeight);
-        y += imgHeight + style.wordSpacing;
       }
     }
 

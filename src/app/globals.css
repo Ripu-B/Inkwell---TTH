@@ -324,6 +324,71 @@
   pointer-events: none;
 }
 
+/* KaTeX Math Formula Styling */
+.katex {
+  font-size: inherit !important;
+  color: inherit !important;
+}
+
+.katex .katex-mathml {
+  display: none !important;
+}
+
+.katex-display {
+  margin: 0.5em 0 !important;
+  text-align: center !important;
+}
+
+.katex-display > .katex {
+  display: inline-block !important;
+  white-space: nowrap !important;
+}
+
+/* Custom font support for math */
+.math-container {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  color: inherit !important;
+}
+
+.math-container .katex {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  color: inherit !important;
+}
+
+/* Override KaTeX default fonts when custom fonts are used */
+.math-container .katex .main {
+  font-family: inherit !important;
+}
+
+.math-container .katex .amsrm {
+  font-family: inherit !important;
+}
+
+.math-container .katex .mathit {
+  font-family: inherit !important;
+  font-style: italic !important;
+}
+
+.math-container .katex .mathbf {
+  font-family: inherit !important;
+  font-weight: bold !important;
+}
+
+.math-container .katex .mathsf {
+  font-family: inherit !important;
+}
+
+.math-container .katex .mathtt {
+  font-family: inherit !important;
+}
+
+/* Improve inline math alignment */
+.katex .base {
+  vertical-align: baseline !important;
+}
+
 .page-container {
     display: flex;
     justify-content: center;
