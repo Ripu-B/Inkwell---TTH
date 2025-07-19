@@ -45,6 +45,11 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+.vs/
+.atom/
+.sublime/
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
@@ -109,3 +114,43 @@ jspm_packages/
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+.tmp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Windows specific
+desktop.ini
+$RECYCLE.BIN/
+
+# Generated files
+generated/
+dist-*/ 
+.cache-loader/
+
+# Local development
+.env.development
+.env.test
+.env.production
+
+# Storybook
+storybook-static/
+
+# Jest
+jest-coverage/
+.jest-cache/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+
+# Turborepo
+.turbo/

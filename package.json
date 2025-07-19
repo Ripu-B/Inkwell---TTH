@@ -10,28 +10,31 @@
   },
   "dependencies": {
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
-    "katex": "^0.16.9",
-    "lightningcss": "^1.24.0",
+    "jspdf": "^3.0.1",
+    "katex": "^0.16.22",
     "next": "15.3.4",
-    "react": "^18",
-    "react-dom": "^18",
-    "react-katex": "^3.0.1",
-    "slate": "^0.100.0",
-    "slate-history": "^0.100.0",
-    "slate-react": "^0.100.0",
-    "zustand": "^4.4.7"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-katex": "^3.1.0",
+    "slate": "^0.117.2",
+    "slate-history": "^0.113.1",
+    "slate-react": "^0.117.3",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/katex": "^0.16.7",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "autoprefixer": "^10.0.1",
-    "eslint": "^8",
+    "@types/react": "^19",
+    "@types/react-color": "^3.0.13",
+    "@types/react-dom": "^19",
+    "@types/react-katex": "^3.0.4",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^8.57.0",
     "eslint-config-next": "15.3.4",
-    "lightningcss": "^1.24.0",
     "postcss": "^8",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@rushstack/eslint-patch": "^1.10.4"
   }
 }

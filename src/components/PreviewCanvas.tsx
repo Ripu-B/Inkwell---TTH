@@ -545,7 +545,7 @@ const PreviewCanvas = () => {
     } finally {
       setIsRendering(false);
     }
-  }, [mainContent, style, effects]);
+  }, [mainContent, style, effects]); // eslint-disable-next-line react-hooks/exhaustive-deps
   
   useEffect(() => {
     setRenderKey(prev => prev + 1);

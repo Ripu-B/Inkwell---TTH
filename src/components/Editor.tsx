@@ -131,7 +131,7 @@ const Editor = ({
   
   const editor = useMemo(() => 
     withVoids(withInlines(withConstraints(withHistory(withReact(createEditor()))))), 
-    [editorKey]
+    [editorKey] // eslint-disable-next-line react-hooks/exhaustive-deps
   );
   const style = useStyleStore();
   const formatting = useFormattingStore();
@@ -315,7 +315,7 @@ const Editor = ({
       case 's': if (event.shiftKey) toggleFormat('subscript'); break;
       case 'm': insertMath(); break;
     }
-  }, [editor]);
+  }, [editor]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const editorContent = (
     <Slate key={editorKey} editor={editor} initialValue={internalContent} onValueChange={handleChange}>

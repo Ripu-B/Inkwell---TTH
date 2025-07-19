@@ -17,8 +17,8 @@ const CustomizationPanel = () => {
       <h2 className="text-xl font-bold mb-4">Customization Options</h2>
       
       {/* Styles section */}
-      <section className="pt-4 first:pt-0">
-        <h3 className="text-lg font-semibold mb-2">Styles</h3>
+      <details open>
+        <summary><h3 className="text-lg font-semibold mb-2">Styles</h3></summary>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium">Ink Color</label>
@@ -40,6 +40,14 @@ const CustomizationPanel = () => {
               <option value="var(--font-liu-jian-mao-cao)">Liu Jian Mao Cao</option>
               <option value="var(--font-indie-flower)">Indie Flower</option>
               <option value="var(--font-zeyada)">Zeyada</option>
+              <option value="var(--font-shadows-into-light)">Shadows Into Light</option>
+              <option value="var(--font-dancing-script)">Dancing Script</option>
+              <option value="var(--font-satisfy)">Satisfy</option>
+              <option value="var(--font-handlee)">Handlee</option>
+              <option value="var(--font-gochi-hand)">Gochi Hand</option>
+              <option value="var(--font-allura)">Allura</option>
+              <option value="var(--font-yellowtail)">Yellowtail</option>
+              <option value="var(--font-parisienne)">Parisienne</option>
             </select>
           </div>
           <div>
@@ -77,11 +85,11 @@ const CustomizationPanel = () => {
             <input type="number" step="0.1" value={style.baselineOffset} onChange={(e) => style.setBaselineOffset(Number(e.target.value))} className="w-full p-1 border rounded" />
           </div>
         </div>
-      </section>
+      </details>
       
       {/* Section-specific styles */}
-      <section className="pt-4 first:pt-0">
-        <h3 className="text-lg font-semibold mb-2">Section Styles</h3>
+      <details open>
+        <summary><h3 className="text-lg font-semibold mb-2">Section Styles</h3></summary>
         
         {/* Header section styles */}
         <div className="mb-4">
@@ -157,11 +165,11 @@ const CustomizationPanel = () => {
             </div>
           </div>
         </div>
-      </section>
+      </details>
       
       {/* Text Formatting section */}
-      <section className="pt-4 first:pt-0">
-        <h3 className="text-lg font-semibold mb-2">Text Formatting</h3>
+      <details open>
+        <summary><h3 className="text-lg font-semibold mb-2">Text Formatting</h3></summary>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">Bold</label>
@@ -229,11 +237,11 @@ const CustomizationPanel = () => {
             </div>
           </div>
         </div>
-      </section>
+      </details>
       
       {/* Lines section */}
-      <section className="pt-4 first:pt-0">
-        <h3 className="text-lg font-semibold mb-2">Lines</h3>
+      <details open>
+        <summary><h3 className="text-lg font-semibold mb-2">Lines</h3></summary>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium">Show Lines</label>
@@ -275,11 +283,11 @@ const CustomizationPanel = () => {
             />
           </div>
         </div>
-      </section>
+      </details>
       
       {/* Margins section */}
-      <section className="pt-4 first:pt-0">
-        <h3 className="text-lg font-semibold mb-2">Margins</h3>
+      <details open>
+        <summary><h3 className="text-lg font-semibold mb-2">Margins</h3></summary>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium">Show Margins</label>
@@ -318,11 +326,11 @@ const CustomizationPanel = () => {
             />
           </div>
         </div>
-      </section>
+      </details>
       
       {/* Effects section */}
-      <section className="pt-4 first:pt-0">
-        <h3 className="text-lg font-semibold mb-2">Effects</h3>
+      <details open>
+        <summary><h3 className="text-lg font-semibold mb-2">Effects</h3></summary>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium">Shadow Enabled</label>
@@ -353,12 +361,13 @@ const CustomizationPanel = () => {
             <input type="checkbox" checked={effects.handwritingRandomization} onChange={(e) => effects.setHandwritingRandomization(e.target.checked)} />
           </div>
         </div>
-      </section>
+      </details>
       
       {/* Advanced Realism section */}
-      <section className="pt-4 first:pt-0">
+      <details open>
+        <summary><h3 className="text-lg font-semibold mb-2">Advanced Realism</h3></summary>
         <AdvancedRealismPanel />
-      </section>
+      </details>
       
       <button onClick={generateImage} className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
         Generate Image
