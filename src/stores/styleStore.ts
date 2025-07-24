@@ -55,6 +55,31 @@ type StyleState = {
   textureOpacity: number;
   paperGrain: boolean;
   
+  // Custom background image
+  customBackgroundEnabled: boolean;
+  customBackgroundUrl: string;
+  customBackgroundOpacity: number;
+  customBackgroundScale: number;
+  customBackgroundOffsetX: number;
+  customBackgroundOffsetY: number;
+  customBackgroundRotation: number;
+  
+  // Manual adjustment mode
+  manualAdjustmentMode: boolean;
+  customLinePositions: Array<{ y: number; visible: boolean }>;
+  customMarginPositions: {
+    top: number;
+    left: number;
+    right: number;
+    bottom: number;
+  };
+  customEditorBounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  
   // Advanced realism
   paperThickness: number;
   bindingType: 'spiral' | 'ring' | 'perfect' | 'none';
@@ -103,6 +128,24 @@ type StyleState = {
   setPaperTexture: (texture: PaperTextures) => void;
   setTextureOpacity: (opacity: number) => void;
   setPaperGrain: (grain: boolean) => void;
+  
+  // Custom background actions
+  setCustomBackgroundEnabled: (enabled: boolean) => void;
+  setCustomBackgroundUrl: (url: string) => void;
+  setCustomBackgroundOpacity: (opacity: number) => void;
+  setCustomBackgroundScale: (scale: number) => void;
+  setCustomBackgroundOffsetX: (offset: number) => void;
+  setCustomBackgroundOffsetY: (offset: number) => void;
+  setCustomBackgroundRotation: (rotation: number) => void;
+  
+  // Manual adjustment actions
+  setManualAdjustmentMode: (enabled: boolean) => void;
+  setCustomLinePositions: (positions: Array<{ y: number; visible: boolean }>) => void;
+  setCustomMarginPositions: (positions: { top: number; left: number; right: number; bottom: number }) => void;
+  setCustomEditorBounds: (bounds: { x: number; y: number; width: number; height: number }) => void;
+  addCustomLine: (y: number) => void;
+  removeCustomLine: (index: number) => void;
+  updateCustomLine: (index: number, y: number, visible?: boolean) => void;
   setPaperThickness: (thickness: number) => void;
   setBindingType: (binding: 'spiral' | 'ring' | 'perfect' | 'none') => void;
   setCornerRadius: (radius: number) => void;
@@ -158,6 +201,21 @@ export const useStyleStore = create<StyleState>((set) => ({
   textureOpacity: 0.1,
   paperGrain: false,
   
+  // Custom background defaults
+  customBackgroundEnabled: false,
+  customBackgroundUrl: '',
+  customBackgroundOpacity: 0.8,
+  customBackgroundScale: 1.0,
+  customBackgroundOffsetX: 0,
+  customBackgroundOffsetY: 0,
+  customBackgroundRotation: 0,
+  
+  // Manual adjustment defaults
+  manualAdjustmentMode: false,
+  customLinePositions: [],
+  customMarginPositions: { top: 40, left: 40, right: 40, bottom: 40 },
+  customEditorBounds: { x: 50, y: 50, width: 600, height: 800 },
+  
   // Advanced realism defaults
   paperThickness: 1,
   bindingType: 'none',
@@ -210,6 +268,32 @@ export const useStyleStore = create<StyleState>((set) => ({
   setPaperTexture: (paperTexture) => set({ paperTexture }),
   setTextureOpacity: (textureOpacity) => set({ textureOpacity }),
   setPaperGrain: (paperGrain) => set({ paperGrain }),
+  
+  // Custom background actions
+  setCustomBackgroundEnabled: (customBackgroundEnabled) => set({ customBackgroundEnabled }),
+  setCustomBackgroundUrl: (customBackgroundUrl) => set({ customBackgroundUrl }),
+  setCustomBackgroundOpacity: (customBackgroundOpacity) => set({ customBackgroundOpacity }),
+  setCustomBackgroundScale: (customBackgroundScale) => set({ customBackgroundScale }),
+  setCustomBackgroundOffsetX: (customBackgroundOffsetX) => set({ customBackgroundOffsetX }),
+  setCustomBackgroundOffsetY: (customBackgroundOffsetY) => set({ customBackgroundOffsetY }),
+  setCustomBackgroundRotation: (customBackgroundRotation) => set({ customBackgroundRotation }),
+  
+  // Manual adjustment actions
+  setManualAdjustmentMode: (manualAdjustmentMode) => set({ manualAdjustmentMode }),
+  setCustomLinePositions: (customLinePositions) => set({ customLinePositions }),
+  setCustomMarginPositions: (customMarginPositions) => set({ customMarginPositions }),
+  setCustomEditorBounds: (customEditorBounds) => set({ customEditorBounds }),
+  addCustomLine: (y) => set((state) => ({ 
+    customLinePositions: [...state.customLinePositions, { y, visible: true }]
+  })),
+  removeCustomLine: (index) => set((state) => ({ 
+    customLinePositions: state.customLinePositions.filter((_, i) => i !== index)
+  })),
+  updateCustomLine: (index, y, visible) => set((state) => ({
+    customLinePositions: state.customLinePositions.map((line, i) => 
+      i === index ? { y, visible: visible ?? line.visible } : line
+    )
+  })),
   setPaperThickness: (paperThickness) => set({ paperThickness }),
   setBindingType: (bindingType) => set({ bindingType }),
   setCornerRadius: (cornerRadius) => set({ cornerRadius }),

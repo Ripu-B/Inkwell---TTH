@@ -6,6 +6,8 @@ import { useEffectsStore } from '@/stores/effectsStore';
 import { useFormattingStore } from '@/stores/formattingStore';
 import { generateImage } from '@/utils/generate';
 import AdvancedRealismPanel from './AdvancedRealismPanel';
+import CustomBackgroundPanel from './CustomBackgroundPanel';
+import ManualAdjustmentPanel from './ManualAdjustmentPanel';
 
 const CustomizationPanel = () => {
   const style = useStyleStore();
@@ -388,8 +390,20 @@ const CustomizationPanel = () => {
         </div>
       </details>
       
+      {/* Custom Background section */}
+      <details>
+        <summary><h3 className="text-lg font-semibold mb-2">Custom Background</h3></summary>
+        <CustomBackgroundPanel />
+      </details>
+      
+      {/* Manual Adjustment section */}
+      <details>
+        <summary><h3 className="text-lg font-semibold mb-2">Manual Adjustment</h3></summary>
+        <ManualAdjustmentPanel />
+      </details>
+      
       {/* Advanced Realism section */}
-      <details open>
+      <details>
         <summary><h3 className="text-lg font-semibold mb-2">Advanced Realism</h3></summary>
         <AdvancedRealismPanel />
       </details>

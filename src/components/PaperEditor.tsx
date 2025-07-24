@@ -84,6 +84,11 @@ const PaperEditor = () => {
 
   // Check if using SimpleA4 format
   const isSimpleA4 = style.pageSize === 'SimpleA4';
+  
+  // Use custom editor bounds if manual adjustment is enabled
+  const editorBounds = style.manualAdjustmentMode 
+    ? style.customEditorBounds 
+    : { x: 50, y: 50, width: scaledWidth - 100, height: scaledHeight - 100 };
 
   return (
     <div>
@@ -111,6 +116,106 @@ const PaperEditor = () => {
         data-text={mainText}
         data-format={style.pageSize}
       >
+      {/* Custom Background Image */}
+      {style.customBackgroundEnabled && style.customBackgroundUrl && (
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url(${style.customBackgroundUrl})`,
+            backgroundSize: `${style.customBackgroundScale * 100}% ${style.customBackgroundScale * 100}%`,
+            backgroundPosition: `${style.customBackgroundOffsetX}px ${style.customBackgroundOffsetY}px`,
+            backgroundRepeat: 'no-repeat',
+            opacity: style.customBackgroundOpacity,
+            transform: `rotate(${style.customBackgroundRotation}deg)`,
+            transformOrigin: 'center',
+            zIndex: 1,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      
+      {/* Custom Lines (when manual adjustment is enabled) */}
+      {style.manualAdjustmentMode && style.customLinePositions.map((line, index) => (
+        line.visible && (
+          <div
+            key={index}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: `${line.y}px`,
+              height: '1px',
+              backgroundColor: style.lineColor,
+              opacity: style.lineOpacity,
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          />
+        )
+      ))}
+      
+      {/* Custom Margins (when manual adjustment is enabled) */}
+      {style.manualAdjustmentMode && (
+        <>
+          {/* Top margin */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: `${style.customMarginPositions.top}px`,
+              height: '1px',
+              backgroundColor: style.marginColor,
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Bottom margin */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: `${style.customMarginPositions.bottom}px`,
+              height: '1px',
+              backgroundColor: style.marginColor,
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Left margin */}
+          <div
+            style={{
+              position: 'absolute',
+              left: `${style.customMarginPositions.left}px`,
+              top: 0,
+              bottom: 0,
+              width: '1px',
+              backgroundColor: style.marginColor,
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Right margin */}
+          <div
+            style={{
+              position: 'absolute',
+              right: `${style.customMarginPositions.right}px`,
+              top: 0,
+              bottom: 0,
+              width: '1px',
+              backgroundColor: style.marginColor,
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          />
+        </>
+      )}
+      
       {/* Realism Effect Layers */}
       {effects.paperGrainEnabled && <div className="paper-grain" style={{ opacity: effects.paperGrainIntensity }} />}
       {effects.documentWeathering && <div className="document-weathering" style={{ opacity: effects.weatheringIntensity }} />}
@@ -125,8 +230,8 @@ const PaperEditor = () => {
         </>
       )}
 
-      {/* For SimpleA4, skip header and side margins */}
-      {!isSimpleA4 && style.showMargins && style.showHeaderMargin && (
+      {/* For SimpleA4, skip header and side margins, also skip if manual adjustment is enabled */}
+      {!isSimpleA4 && !style.manualAdjustmentMode && style.showMargins && style.showHeaderMargin && (
         <div className="header-section" style={{
           height: `${headerHeight}px`,
           borderBottom: `1px solid ${style.marginColor}`,
@@ -169,7 +274,7 @@ const PaperEditor = () => {
         backgroundColor: 'transparent',
         position: 'relative',
       }}>
-        {!isSimpleA4 && style.showMargins && style.showSideMargins && (
+        {!isSimpleA4 && !style.manualAdjustmentMode && style.showMargins && style.showSideMargins && (
           <div className="side-section" style={{
             width: `${sideNoteWidth}px`,
             borderRight: `1px solid ${style.marginColor}`,
@@ -201,9 +306,16 @@ const PaperEditor = () => {
           </div>
         )}
         <div className="main-section" style={{ 
-          width: !isSimpleA4 && style.showMargins && style.showSideMargins ? `${scaledWidth - sideNoteWidth}px` : `${scaledWidth}px`,
-          position: 'relative',
+          width: style.manualAdjustmentMode 
+            ? `${editorBounds.width}px`
+            : (!isSimpleA4 && style.showMargins && style.showSideMargins ? `${scaledWidth - sideNoteWidth}px` : `${scaledWidth}px`),
+          height: style.manualAdjustmentMode ? `${editorBounds.height}px` : 'auto',
+          position: style.manualAdjustmentMode ? 'absolute' : 'relative',
+          left: style.manualAdjustmentMode ? `${editorBounds.x}px` : 'auto',
+          top: style.manualAdjustmentMode ? `${editorBounds.y}px` : 'auto',
           backgroundColor: 'transparent',
+          zIndex: 3,
+          overflow: style.manualAdjustmentMode ? 'hidden' : 'visible',
         }}>
           
           {showMarkupInput ? (
