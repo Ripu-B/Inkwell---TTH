@@ -228,7 +228,13 @@ export const useStyleStore = create<StyleState>((set) => ({
   superscriptSize: 0.7,
   
   // Actions
-  setInkColor: (inkColor) => set({ inkColor, headerInkColor: inkColor, sideNoteInkColor: inkColor, mainContentInkColor: inkColor }),
+  setInkColor: (inkColor) => set((state) => ({ 
+    inkColor,
+    // Only update section colors if they haven't been customized (i.e., they match the current global ink color)
+    headerInkColor: state.headerInkColor === state.inkColor ? inkColor : state.headerInkColor,
+    sideNoteInkColor: state.sideNoteInkColor === state.inkColor ? inkColor : state.sideNoteInkColor,
+    mainContentInkColor: state.mainContentInkColor === state.inkColor ? inkColor : state.mainContentInkColor
+  })),
   setPaperColor: (paperColor) => set({ paperColor }),
   setFontFamily: (fontFamily) => set({ fontFamily }),
   setFontSize: (fontSize) => set({ fontSize }),

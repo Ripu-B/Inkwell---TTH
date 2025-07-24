@@ -14,7 +14,7 @@ type FormattingState = {
   toggleUnderline: () => void;
   toggleSuperscript: () => void;
   toggleSubscript: () => void;
-  setTextColor: (color: string) => void;
+  setTextColor: (color: string | null) => void;
   resetFormatting: () => void;
 };
 

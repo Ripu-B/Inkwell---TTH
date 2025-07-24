@@ -257,8 +257,12 @@ const Editor = ({
               charStyle.fontSize = `${style.fontSize * (1 + variation)}px`;
             }
 
-            // Apply color to individual characters - use leaf color or inherit from style
-            charStyle.color = props.leaf.color || style.inkColor;
+            // Apply color to individual characters - prioritize leaf color over style color
+            if (props.leaf.color) {
+              charStyle.color = props.leaf.color;
+            } else {
+              charStyle.color = style.inkColor;
+            }
 
             if (Object.keys(charStyle).length > 0) {
               return <span key={index} style={charStyle}>{char}</span>;
@@ -271,7 +275,14 @@ const Editor = ({
     
     // For focused or no effects, add styles to the span
     const leafStyle: React.CSSProperties = {};
-    leafStyle.color = props.leaf.color || style.inkColor; // Always apply color - either leaf color or default ink color
+    // Apply color hierarchy: leaf color > formatting color > global ink color
+    if (props.leaf.color) {
+      leafStyle.color = props.leaf.color;
+    } else if (formatting.textColor) {
+      leafStyle.color = formatting.textColor;
+    } else {
+      leafStyle.color = style.inkColor;
+    }
     if (props.leaf.fontSize) leafStyle.fontSize = `${props.leaf.fontSize}px`;
     
     return <span {...props.attributes} style={leafStyle}>{children}</span>;
@@ -326,9 +337,25 @@ const Editor = ({
   // Apply text color from formatting store
   useEffect(() => {
     if (formatting.textColor && editor.selection) {
+      // Apply the color mark to the current selection
       SlateEditor.addMark(editor, 'color', formatting.textColor);
     }
   }, [formatting.textColor, editor]);
+
+  // Update color marks when user types with formatting color active
+  useEffect(() => {
+    const { insertText } = editor;
+    editor.insertText = (text) => {
+      // If formatting has a color set, apply it to new text
+      if (formatting.textColor) {
+        SlateEditor.addMark(editor, 'color', formatting.textColor);
+      }
+      insertText(text);
+    };
+    return () => {
+      editor.insertText = insertText;
+    };
+  }, [editor, formatting.textColor]);
 
   const editorContent = (
     <Slate key={editorKey} editor={editor} initialValue={internalContent} onValueChange={handleChange}>
@@ -342,7 +369,7 @@ const Editor = ({
         onBlur={() => setIsFocused(false)}
         className="outline-none slate-editor"
         style={{
-          color: style.inkColor,
+          color: formatting.textColor || style.inkColor, // Use formatting color if set, otherwise global ink color
           fontFamily: style.fontFamily,
           fontSize: `${style.fontSize}px`,
           letterSpacing: `${style.letterSpacing}px`,

@@ -23,8 +23,9 @@ const CustomizationPanel = () => {
         <summary><h3 className="text-lg font-semibold mb-2">Styles</h3></summary>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium">Ink Color</label>
+            <label className="block text-sm font-medium">Global Ink Color</label>
             <input type="color" value={style.inkColor} onChange={(e) => style.setInkColor(e.target.value)} className="w-full" />
+            <span className="text-xs text-gray-500">Default color for new text</span>
           </div>
           <div>
             <label className="block text-sm font-medium">Paper Color</label>
@@ -110,12 +111,21 @@ const CustomizationPanel = () => {
             </div>
             <div>
               <label className="block text-sm font-medium">Ink Color</label>
-              <input 
-                type="color" 
-                value={style.headerInkColor} 
-                onChange={(e) => style.setHeaderInkColor(e.target.value)} 
-                className="w-full" 
-              />
+              <div className="flex space-x-1">
+                <input 
+                  type="color" 
+                  value={style.headerInkColor} 
+                  onChange={(e) => style.setHeaderInkColor(e.target.value)} 
+                  className="flex-1" 
+                />
+                <button
+                  onClick={() => style.setHeaderInkColor(style.inkColor)}
+                  className="px-2 py-1 bg-gray-400 text-white text-xs rounded hover:bg-gray-500"
+                  title="Reset to global ink color"
+                >
+                  ↻
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -135,12 +145,21 @@ const CustomizationPanel = () => {
             </div>
             <div>
               <label className="block text-sm font-medium">Ink Color</label>
-              <input 
-                type="color" 
-                value={style.sideNoteInkColor} 
-                onChange={(e) => style.setSideNoteInkColor(e.target.value)} 
-                className="w-full" 
-              />
+              <div className="flex space-x-1">
+                <input 
+                  type="color" 
+                  value={style.sideNoteInkColor} 
+                  onChange={(e) => style.setSideNoteInkColor(e.target.value)} 
+                  className="flex-1" 
+                />
+                <button
+                  onClick={() => style.setSideNoteInkColor(style.inkColor)}
+                  className="px-2 py-1 bg-gray-400 text-white text-xs rounded hover:bg-gray-500"
+                  title="Reset to global ink color"
+                >
+                  ↻
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -160,12 +179,21 @@ const CustomizationPanel = () => {
             </div>
             <div>
               <label className="block text-sm font-medium">Ink Color</label>
-              <input 
-                type="color" 
-                value={style.mainContentInkColor} 
-                onChange={(e) => style.setMainContentInkColor(e.target.value)} 
-                className="w-full" 
-              />
+              <div className="flex space-x-1">
+                <input 
+                  type="color" 
+                  value={style.mainContentInkColor} 
+                  onChange={(e) => style.setMainContentInkColor(e.target.value)} 
+                  className="flex-1" 
+                />
+                <button
+                  onClick={() => style.setMainContentInkColor(style.inkColor)}
+                  className="px-2 py-1 bg-gray-400 text-white text-xs rounded hover:bg-gray-500"
+                  title="Reset to global ink color"
+                >
+                  ↻
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -241,15 +269,25 @@ const CustomizationPanel = () => {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Text Color</label>
+            <label className="text-sm font-medium">Selected Text Color</label>
             <div className="flex items-center gap-2">
               <input 
                 type="color" 
-                value={formatting.textColor || '#000000'} 
+                value={formatting.textColor || style.inkColor} 
                 onChange={(e) => formatting.setTextColor(e.target.value)} 
                 className="w-8 h-8 p-0 border-0"
               />
+              <button
+                onClick={() => formatting.setTextColor(null)}
+                className="px-2 py-1 bg-gray-400 text-white text-xs rounded hover:bg-gray-500"
+                title="Clear color (use default)"
+              >
+                ✕
+              </button>
             </div>
+          </div>
+          <div className="text-xs text-gray-600 mb-2">
+            <strong>Note:</strong> This color applies to selected text. Global ink color is used for new text.
           </div>
           <div className="grid grid-cols-6 gap-1 mt-2">
             {['#000000', '#0000FF', '#FF0000', '#008000', '#800080', '#FFA500'].map(color => (

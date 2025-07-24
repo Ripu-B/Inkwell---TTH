@@ -153,17 +153,54 @@ export const generateImage = async () => {
         const textElements = pagePaper.querySelectorAll('p, span:not(.ink-flow-text)');
         textElements.forEach(el => {
           if (el instanceof HTMLElement && el.innerText.trim()) {
-            let newHTML = '';
-            for (const char of el.innerText) {
-              const variation = (Math.random() - 0.5) * effects.inkFlowIntensity * 0.08;
-              const rotation = (Math.random() - 0.5) * effects.inkFlowIntensity * 3;
-              // Make sure the ink color is applied to each character span
-              const inkColor = el.style.color || 
-                              window.getComputedStyle(el).color || 
-                              style.inkColor;
-              newHTML += `<span class="ink-flow-text" style="transform: scale(${1 + variation}) rotate(${rotation}deg); color: ${inkColor};">${char}</span>`;
+            // Skip if this element has child spans with colors (to preserve them)
+            const hasColoredChildren = el.querySelectorAll('span[style*="color"]').length > 0;
+            if (hasColoredChildren) {
+              // Process each text node separately to preserve colored spans
+              const walker = document.createTreeWalker(
+                el,
+                NodeFilter.SHOW_TEXT,
+                null
+              );
+              const textNodes: Text[] = [];
+              let node;
+              while (node = walker.nextNode()) {
+                if (node.textContent && node.textContent.trim()) {
+                  textNodes.push(node as Text);
+                }
+              }
+              
+              textNodes.forEach(textNode => {
+                const parent = textNode.parentElement;
+                if (parent && !parent.classList.contains('ink-flow-text')) {
+                  const computedStyle = window.getComputedStyle(parent);
+                  const inkColor = parent.style.color || computedStyle.color || style.inkColor;
+                  let newSpans = '';
+                  for (const char of textNode.textContent || '') {
+                    const variation = (Math.random() - 0.5) * effects.inkFlowIntensity * 0.08;
+                    const rotation = (Math.random() - 0.5) * effects.inkFlowIntensity * 3;
+                    newSpans += `<span class="ink-flow-text" style="transform: scale(${1 + variation}) rotate(${rotation}deg); color: ${inkColor}; display: inline-block;">${char}</span>`;
+                  }
+                  const tempDiv = document.createElement('div');
+                  tempDiv.innerHTML = newSpans;
+                  while (tempDiv.firstChild) {
+                    parent.insertBefore(tempDiv.firstChild, textNode);
+                  }
+                  textNode.remove();
+                }
+              });
+            } else {
+              // No colored children, process normally
+              let newHTML = '';
+              for (const char of el.innerText) {
+                const variation = (Math.random() - 0.5) * effects.inkFlowIntensity * 0.08;
+                const rotation = (Math.random() - 0.5) * effects.inkFlowIntensity * 3;
+                const computedStyle = window.getComputedStyle(el);
+                const inkColor = el.style.color || computedStyle.color || style.inkColor;
+                newHTML += `<span class="ink-flow-text" style="transform: scale(${1 + variation}) rotate(${rotation}deg); color: ${inkColor}; display: inline-block;">${char}</span>`;
+              }
+              el.innerHTML = newHTML;
             }
-            el.innerHTML = newHTML;
           }
         });
       }
@@ -175,10 +212,9 @@ export const generateImage = async () => {
             let newHTML = '';
             [...el.innerText].forEach((char, index) => {
               const wobble = Math.sin(index * 0.5 + Math.random() * 0.5) * effects.baselineWobbleIntensity * 2;
-              // Preserve the text color
-              const inkColor = el.style.color || 
-                              window.getComputedStyle(el).color || 
-                              style.inkColor;
+              // Preserve the original color of the element
+              const computedStyle = window.getComputedStyle(el);
+              const inkColor = el.style.color || computedStyle.color || style.inkColor;
               newHTML += `<span class="baseline-wobble-span" style="transform: translateY(${wobble}px); display: inline-block; color: ${inkColor};">${char}</span>`;
             });
             el.innerHTML = newHTML;
