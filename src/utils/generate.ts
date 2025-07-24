@@ -158,7 +158,9 @@ export const generateImage = async () => {
               const variation = (Math.random() - 0.5) * effects.inkFlowIntensity * 0.08;
               const rotation = (Math.random() - 0.5) * effects.inkFlowIntensity * 3;
               // Make sure the ink color is applied to each character span
-              const inkColor = el.style.color || style.inkColor;
+              const inkColor = el.style.color || 
+                              window.getComputedStyle(el).color || 
+                              style.inkColor;
               newHTML += `<span class="ink-flow-text" style="transform: scale(${1 + variation}) rotate(${rotation}deg); color: ${inkColor};">${char}</span>`;
             }
             el.innerHTML = newHTML;
@@ -173,7 +175,11 @@ export const generateImage = async () => {
             let newHTML = '';
             [...el.innerText].forEach((char, index) => {
               const wobble = Math.sin(index * 0.5 + Math.random() * 0.5) * effects.baselineWobbleIntensity * 2;
-              newHTML += `<span class="baseline-wobble-span" style="transform: translateY(${wobble}px); display: inline-block;">${char}</span>`;
+              // Preserve the text color
+              const inkColor = el.style.color || 
+                              window.getComputedStyle(el).color || 
+                              style.inkColor;
+              newHTML += `<span class="baseline-wobble-span" style="transform: translateY(${wobble}px); display: inline-block; color: ${inkColor};">${char}</span>`;
             });
             el.innerHTML = newHTML;
           }
@@ -187,6 +193,14 @@ export const generateImage = async () => {
             const variation = (Math.random() - 0.5) * effects.fontSizeVariationIntensity;
             span.classList.add('font-size-variation');
             span.style.fontSize = `${parseFloat(window.getComputedStyle(span).fontSize) * (1 + variation)}px`;
+            
+            // Make sure color is preserved
+            if (!span.style.color) {
+              const computedColor = window.getComputedStyle(span).color;
+              if (computedColor) {
+                span.style.color = computedColor;
+              }
+            }
           }
         });
       }
@@ -199,6 +213,14 @@ export const generateImage = async () => {
             span.classList.add('pen-pressure-variation');
             span.style.opacity = (0.7 + pressure * 0.3).toString();
             span.style.textShadow = `0 0 ${Math.random() * effects.penPressureIntensity * 0.5}px`;
+            
+            // Make sure color is preserved
+            if (!span.style.color) {
+              const computedColor = window.getComputedStyle(span).color;
+              if (computedColor) {
+                span.style.color = computedColor;
+              }
+            }
           }
         });
       }

@@ -277,6 +277,19 @@
   line-height: 24px;
 }
 
+/* SimpleA4 format with 0.7cm line spacing */
+.paper.lines[data-format="SimpleA4"] .content-section {
+  background-image: linear-gradient(#e6e6e6 1px, transparent 1px);
+  background-size: 100% 26.5px; /* 0.7cm ≈ 26.5px */
+  background-position: 0 0;
+}
+
+/* Ensure consistent line height for SimpleA4 format */
+.paper.lines[data-format="SimpleA4"] .main-section .slate-editor,
+.paper.lines[data-format="SimpleA4"] .side-section .slate-editor {
+  line-height: 26.5px !important; /* 0.7cm ≈ 26.5px */
+}
+
 .main-section .slate-editor,
 .side-section .slate-editor {
   padding-top: 6px; /* Increase padding to better align text with lines */
@@ -322,6 +335,11 @@
   background-size: 100% 24px;
   background-position: 0 0;
   pointer-events: none;
+}
+
+/* SimpleA4 specific line spacing for the side section */
+.paper.lines[data-format="SimpleA4"] .side-section::before {
+  background-size: 100% 26.5px; /* 0.7cm ≈ 26.5px */
 }
 
 /* KaTeX Math Formula Styling */

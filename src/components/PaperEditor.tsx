@@ -31,6 +31,7 @@ const PaperEditor = () => {
     'Legal': { width: 816, height: 1344 },
     'A5': { width: 559, height: 794 },
     'Executive': { width: 696, height: 1008 },
+    'SimpleA4': { width: 794 - 98, height: 1123 - 98 }, // 2.6cm (≈ 98px) cut from both width and height
   };
   const { width: paperWidth, height: paperHeight } = pageSizes[style.pageSize] || pageSizes['A4'];
   
@@ -44,8 +45,12 @@ const PaperEditor = () => {
   // Calculate side note width (about 15% of width)
   const sideNoteWidth = Math.floor(scaledWidth * 0.15);
 
-  const lineSpacing = 24; // in pixels, matches globals.css
+  // Convert 0.7cm to pixels (approximately 26.5px)
+  const lineSpacing = style.pageSize === 'SimpleA4' ? 26.5 : 24; // 0.7cm line spacing for SimpleA4
 
+  // Ensure consistent line spacing across the editor
+  const editorLineHeight = style.pageSize === 'SimpleA4' ? '26.5px' : `${style.lineSpacing}px`;
+  
   // Determine paper classes
   const paperClasses = [
     'paper',
@@ -76,6 +81,9 @@ const PaperEditor = () => {
 
   const mainText = extractTextContent(mainContent);
 
+  // Check if using SimpleA4 format
+  const isSimpleA4 = style.pageSize === 'SimpleA4';
+
   return (
     <div>
       {/* Toggle button for markup input */}
@@ -100,6 +108,7 @@ const PaperEditor = () => {
         className={paperClasses}
         style={paperStyle}
         data-text={mainText}
+        data-format={style.pageSize}
       >
       {/* Realism Effect Layers */}
       {effects.paperGrainEnabled && <div className="paper-grain" style={{ opacity: effects.paperGrainIntensity }} />}
@@ -115,7 +124,8 @@ const PaperEditor = () => {
         </>
       )}
 
-      {style.showMargins && style.showHeaderMargin && (
+      {/* For SimpleA4, skip header and side margins */}
+      {!isSimpleA4 && style.showMargins && style.showHeaderMargin && (
         <div className="header-section" style={{
           height: `${headerHeight}px`,
           borderBottom: `1px solid ${style.marginColor}`,
@@ -158,7 +168,7 @@ const PaperEditor = () => {
         backgroundColor: 'transparent',
         position: 'relative',
       }}>
-        {style.showMargins && style.showSideMargins && (
+        {!isSimpleA4 && style.showMargins && style.showSideMargins && (
           <div className="side-section" style={{
             width: `${sideNoteWidth}px`,
             borderRight: `1px solid ${style.marginColor}`,
@@ -182,14 +192,14 @@ const PaperEditor = () => {
                 fontSize: `${style.sideNoteFontSize}px`,
                 color: style.sideNoteInkColor,
                 padding: '0 5px',
-                lineHeight: `${lineSpacing}px`,
+                lineHeight: editorLineHeight,
               }}
               placeholder="Side notes..."
             />
           </div>
         )}
         <div className="main-section" style={{ 
-          width: style.showMargins && style.showSideMargins ? `${scaledWidth - sideNoteWidth}px` : `${scaledWidth}px`,
+          width: !isSimpleA4 && style.showMargins && style.showSideMargins ? `${scaledWidth - sideNoteWidth}px` : `${scaledWidth}px`,
           position: 'relative',
           backgroundColor: 'transparent',
         }}>
@@ -212,7 +222,7 @@ const PaperEditor = () => {
                 fontSize: `${style.mainContentFontSize}px`,
                 color: style.mainContentInkColor,
                 padding: '0 15px',
-                lineHeight: `${lineSpacing}px`,
+                lineHeight: editorLineHeight,
                 backgroundColor: 'transparent',
                 border: 'none',
                 outline: 'none',
@@ -231,7 +241,7 @@ const PaperEditor = () => {
                 fontSize: `${style.mainContentFontSize}px`,
                 color: style.mainContentInkColor,
                 padding: '0 15px',
-                lineHeight: `${lineSpacing}px`,
+                lineHeight: editorLineHeight,
               }}
               placeholder="Start writing notes here..."
             />

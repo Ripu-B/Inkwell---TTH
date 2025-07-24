@@ -78,6 +78,7 @@ const CustomizationPanel = () => {
               <option value="Legal">Legal</option>
               <option value="A5">A5</option>
               <option value="Executive">Executive</option>
+              <option value="SimpleA4">Simple A4 (Lines Only)</option>
             </select>
           </div>
           <div>
@@ -235,6 +236,28 @@ const CustomizationPanel = () => {
               />
               <span className="text-xs text-gray-500">Ctrl+Shift+S</span>
             </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Text Color</label>
+            <div className="flex items-center gap-2">
+              <input 
+                type="color" 
+                value={formatting.textColor || '#000000'} 
+                onChange={(e) => formatting.setTextColor(e.target.value)} 
+                className="w-8 h-8 p-0 border-0"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-6 gap-1 mt-2">
+            {['#000000', '#0000FF', '#FF0000', '#008000', '#800080', '#FFA500'].map(color => (
+              <button 
+                key={color} 
+                className="w-full h-6 rounded border border-gray-300" 
+                style={{ backgroundColor: color }}
+                onClick={() => formatting.setTextColor(color)}
+                aria-label={`Set text color to ${color}`}
+              />
+            ))}
           </div>
         </div>
       </details>

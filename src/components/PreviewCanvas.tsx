@@ -618,7 +618,7 @@ function drawLine(
   sub: boolean
 ) {
   let currentX = x;
-  targetCtx.fillStyle = color;
+  targetCtx.fillStyle = color; // Use the passed color
   const lineWidth = targetCtx.measureText(line).width;
   const lineHeight = fontSize * 1.2;
 
@@ -626,11 +626,14 @@ function drawLine(
   if (mark) {
     targetCtx.fillStyle = 'yellow'; // or some highlight color
     targetCtx.fillRect(currentX, y - fontSize, lineWidth, lineHeight);
-    targetCtx.fillStyle = color;
+    targetCtx.fillStyle = color; // Reset to the passed color after highlighting
   }
 
   for (const [i, char] of line.split('').entries()) {
     targetCtx.save();
+    
+    // Ensure color is set for each character
+    targetCtx.fillStyle = color;
     
     let adjustedY = y;
     let adjustedSize = fontSize;
@@ -671,7 +674,7 @@ function drawLine(
       
       // Add subtle text shadow for ink bleed effect
       const bleedAmount = Math.random() * effects.penPressureIntensity * 0.5;
-      targetCtx.shadowColor = targetCtx.fillStyle.toString();
+      targetCtx.shadowColor = color; // Use the passed color for shadow
       targetCtx.shadowBlur = bleedAmount;
     }
     
@@ -691,7 +694,7 @@ function drawLine(
     targetCtx.beginPath();
     targetCtx.moveTo(x, y + 2);
     targetCtx.lineTo(x + lineWidth, y + 2);
-    targetCtx.strokeStyle = color;
+    targetCtx.strokeStyle = color; // Use the passed color for underline
     targetCtx.lineWidth = 1;
     targetCtx.stroke();
   }
@@ -699,7 +702,7 @@ function drawLine(
     targetCtx.beginPath();
     targetCtx.moveTo(x, y - fontSize / 3);
     targetCtx.lineTo(x + lineWidth, y - fontSize / 3);
-    targetCtx.strokeStyle = color;
+    targetCtx.strokeStyle = color; // Use the passed color for strikethrough
     targetCtx.lineWidth = 1;
     targetCtx.stroke();
   }

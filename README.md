@@ -10,10 +10,11 @@ Inkwell is a cutting-edge digital writing application designed to bridge the gap
 5. [Key Components](#key-components)
 6. [Markup Parser](#markup-parser)
 7. [State Management](#state-management)
-8. [Setup & Installation](#setup--installation)
-9. [Deployment](#deployment)
-10. [Known Issues & Future Work](#known-issues--future-work)
-11. [License](#license)
+8. [New Features](#new-features)
+9. [Setup & Installation](#setup--installation)
+10. [Deployment](#deployment)
+11. [Known Issues & Future Work](#known-issues--future-work)
+12. [License](#license)
 
 ## Core Philosophy
 
@@ -157,6 +158,41 @@ Inkwell uses **Zustand** for lightweight and efficient state management. The sta
 *   `styleStore`: Manages all visual styling options (colors, fonts, spacing, paper size, etc.).
 *   `effectsStore`: Manages the settings for all realism effects (shadows, textures, scanner emulation, etc.).
 *   `formattingStore`: Tracks the currently active formatting options (bold, italic, etc.).
+
+## New Features
+
+### SimpleA4 Page Format
+
+The SimpleA4 format provides a clean, minimalist writing experience:
+
+* **Streamlined Design**: Only includes the main text input area without header or side margins
+* **Modified A4 Size**: Slightly smaller than standard A4, with 2.6cm cut from both height and width
+* **Consistent Line Spacing**: Fixed 0.7cm (26.5px) line spacing for optimal writing experience
+* **No Margins**: Removes all margin elements for a distraction-free writing surface
+
+To use the SimpleA4 format:
+1. Open the Customization Panel
+2. Under "Styles", find the "Page Size" dropdown
+3. Select "Simple A4 (Lines Only)"
+
+### Multi-Color Ink Feature
+
+The multi-color ink feature allows you to use different colors for different parts of your text:
+
+* **Color Selection**: Choose from preset colors or use a custom color picker
+* **Contextual Use**: Ideal for distinguishing between different types of content (e.g., black for questions, blue for answers)
+* **Real-time Preview**: See color changes immediately as you type
+
+To use multi-color ink:
+1. Select the text you want to color
+2. In the Customization Panel under "Text Formatting", use the color picker or preset color buttons
+3. The selected text will change to your chosen color
+
+This feature is perfect for:
+* Creating visual hierarchy in your notes
+* Highlighting important information
+* Distinguishing between different voices or sections
+* Making your documents more visually engaging
 
 ## Setup & Installation
 

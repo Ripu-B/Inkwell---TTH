@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 type LineTypes = 'ruled' | 'grid' | 'dotted' | 'none';
-type PageSizes = 'A4' | 'Letter' | 'Legal' | 'A5' | 'Executive';
+type PageSizes = 'A4' | 'Letter' | 'Legal' | 'A5' | 'Executive' | 'SimpleA4';
 type PaperTextures = 'none' | 'parchment' | 'linen' | 'recycled' | 'college' | 'graph';
 
 type StyleState = {

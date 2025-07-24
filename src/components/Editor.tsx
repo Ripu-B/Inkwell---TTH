@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo, type ReactNode, useEffect, useState } from 'react';
-import { createEditor, Descendant, Transforms } from 'slate';
+import { createEditor, Descendant, Transforms, Editor as SlateEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import { withHistory } from 'slate-history';
 import { useContentStore } from '@/stores/contentStore';
@@ -13,7 +13,7 @@ import 'katex/dist/katex.min.css';
 import SlateToolbar from './SlateToolbar';
 
 import { CustomElement, CustomText } from '@/types/slate.d';
-import { Editor as SlateEditor, Node, Path, Element, Text } from 'slate';
+import { Node, Path, Element, Text } from 'slate';
 
 const withConstraints = (editor: SlateEditor) => {
   const { normalizeNode } = editor;
@@ -250,8 +250,16 @@ const Editor = ({
             }
 
             if (effects.fontSizeVariationEnabled && Math.random() < 0.2) {
-              const variation = (Math.random() - 0.5) * effects.fontSizeVariationIntensity;
+              // Limit the variation to prevent characters from disappearing
+              // Use a much smaller variation range and ensure it's never negative
+              const variation = Math.random() * effects.fontSizeVariationIntensity * 0.3;
+              // Apply a small positive variation only, never reduce size below original
               charStyle.fontSize = `${style.fontSize * (1 + variation)}px`;
+            }
+
+            // Apply color to individual characters if specified in the leaf
+            if (props.leaf.color) {
+              charStyle.color = props.leaf.color;
             }
 
             if (Object.keys(charStyle).length > 0) {
@@ -316,6 +324,13 @@ const Editor = ({
       case 'm': insertMath(); break;
     }
   }, [editor]); // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  // Apply text color from formatting store
+  useEffect(() => {
+    if (formatting.textColor && editor.selection) {
+      SlateEditor.addMark(editor, 'color', formatting.textColor);
+    }
+  }, [formatting.textColor, editor]);
 
   const editorContent = (
     <Slate key={editorKey} editor={editor} initialValue={internalContent} onValueChange={handleChange}>
