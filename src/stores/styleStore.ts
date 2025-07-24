@@ -176,7 +176,7 @@ export const useStyleStore = create<StyleState>((set) => ({
   setFontSize: (fontSize) => set({ fontSize }),
   setLetterSpacing: (letterSpacing) => set({ letterSpacing }),
   setWordSpacing: (wordSpacing) => set({ wordSpacing }),
-  setLineHeight: (lineHeight) => set({ lineHeight }),
+  setLineHeight: (lineHeight) => set({ lineHeight, lineSpacing: lineHeight * 16 }), // Sync line height with line spacing (16px base)
   setBaselineOffset: (baselineOffset) => set({ baselineOffset }),
   
   // Section-specific actions
@@ -195,7 +195,11 @@ export const useStyleStore = create<StyleState>((set) => ({
   setShowRuledLines: (showRuledLines) => set({ showRuledLines }),
   setShowGridLines: (showGridLines) => set({ showGridLines }),
   setShowDottedLines: (showDottedLines) => set({ showDottedLines }),
-  setLineSpacing: (lineSpacing) => set({ lineSpacing }),
+  setLineSpacing: (lineSpacing) => set((state) => ({ 
+    lineSpacing,
+    // Auto-sync line height if it's close to the default ratio
+    lineHeight: Math.abs(state.lineHeight - (state.lineSpacing / 16)) < 0.2 ? lineSpacing / 16 : state.lineHeight
+  })),
   setLineOpacity: (lineOpacity) => set({ lineOpacity }),
   setLineColor: (lineColor) => set({ lineColor }),
   setShowMargins: (showMargins) => set({ showMargins }),

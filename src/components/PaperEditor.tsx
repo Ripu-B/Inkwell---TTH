@@ -45,11 +45,11 @@ const PaperEditor = () => {
   // Calculate side note width (about 15% of width)
   const sideNoteWidth = Math.floor(scaledWidth * 0.15);
 
-  // Convert 0.7cm to pixels (approximately 26.5px)
-  const lineSpacing = style.pageSize === 'SimpleA4' ? 26.5 : 24; // 0.7cm line spacing for SimpleA4
+  // Calculate line spacing based on style settings
+  const lineSpacing = style.pageSize === 'SimpleA4' ? 26.5 : style.lineSpacing; // 0.7cm for SimpleA4, custom for others
 
-  // Ensure consistent line spacing across the editor
-  const editorLineHeight = style.pageSize === 'SimpleA4' ? '26.5px' : `${style.lineSpacing}px`;
+  // Ensure consistent line spacing across the editor - use pixel values
+  const editorLineHeight = `${lineSpacing}px`;
   
   // Determine paper classes
   const paperClasses = [
@@ -66,8 +66,9 @@ const PaperEditor = () => {
     flexDirection: 'column',
     margin: '0 auto',
     position: 'relative',
+    '--line-spacing': `${lineSpacing}px`,
     ...shadowStyle,
-  };
+  } as React.CSSProperties;
 
   // Create text content for chromatic aberration
   const extractTextContent = (content: Descendant[]) => {
@@ -188,12 +189,13 @@ const PaperEditor = () => {
               setContent={setSideContent}
               showToolbar={false}
               noContainer={true}
-              styleOverrides={{
-                fontSize: `${style.sideNoteFontSize}px`,
-                color: style.sideNoteInkColor,
-                padding: '0 5px',
-                lineHeight: editorLineHeight,
-              }}
+            styleOverrides={{
+              fontSize: `${style.sideNoteFontSize}px`,
+              color: style.sideNoteInkColor,
+              padding: '0 5px',
+              lineHeight: editorLineHeight,
+              fontFamily: style.fontFamily,
+            }}
               placeholder="Side notes..."
             />
           </div>
@@ -242,6 +244,7 @@ const PaperEditor = () => {
                 color: style.mainContentInkColor,
                 padding: '0 15px',
                 lineHeight: editorLineHeight,
+                fontFamily: style.fontFamily,
               }}
               placeholder="Start writing notes here..."
             />

@@ -257,10 +257,8 @@ const Editor = ({
               charStyle.fontSize = `${style.fontSize * (1 + variation)}px`;
             }
 
-            // Apply color to individual characters if specified in the leaf
-            if (props.leaf.color) {
-              charStyle.color = props.leaf.color;
-            }
+            // Apply color to individual characters - use leaf color or inherit from style
+            charStyle.color = props.leaf.color || style.inkColor;
 
             if (Object.keys(charStyle).length > 0) {
               return <span key={index} style={charStyle}>{char}</span>;
@@ -273,7 +271,7 @@ const Editor = ({
     
     // For focused or no effects, add styles to the span
     const leafStyle: React.CSSProperties = {};
-    if (props.leaf.color) leafStyle.color = props.leaf.color;
+    leafStyle.color = props.leaf.color || style.inkColor; // Always apply color - either leaf color or default ink color
     if (props.leaf.fontSize) leafStyle.fontSize = `${props.leaf.fontSize}px`;
     
     return <span {...props.attributes} style={leafStyle}>{children}</span>;

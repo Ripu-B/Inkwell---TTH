@@ -28,7 +28,7 @@
 /* Ensure lines align across sections */
 .paper.lines .content-section {
   background-image: linear-gradient(#e6e6e6 1px, transparent 1px);
-  background-size: 100% 24px;
+  background-size: 100% var(--line-spacing, 24px);
   background-position: 0 0;
   position: relative;
 }
@@ -292,20 +292,23 @@
 
 .main-section .slate-editor,
 .side-section .slate-editor {
-  padding-top: 6px; /* Increase padding to better align text with lines */
+  padding-top: 4px; /* Better alignment with ruled lines */
   word-wrap: break-word;
   white-space: pre-wrap;
   overflow-wrap: break-word;
   max-width: 100%;
   box-sizing: border-box;
   cursor: text;
+  /* Ensure text aligns with background lines */
+  vertical-align: baseline;
 }
 
 /* Remove default margins from paragraphs inside the editor */
 .slate-editor p {
   margin: 0;
   padding: 0;
-  min-height: 1.5em;
+  min-height: var(--line-spacing, 24px);
+  line-height: inherit;
 }
 
 /* Improve editor focus appearance */
@@ -332,7 +335,7 @@
   left: 0;
   width: 100%;
   background-image: linear-gradient(#e6e6e6 1px, transparent 1px);
-  background-size: 100% 24px;
+  background-size: 100% var(--line-spacing, 24px);
   background-position: 0 0;
   pointer-events: none;
 }

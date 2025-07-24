@@ -59,7 +59,7 @@ const CustomizationPanel = () => {
             <input type="number" value={style.wordSpacing} onChange={(e) => style.setWordSpacing(Number(e.target.value))} className="w-full p-1 border rounded" />
           </div>
           <div>
-            <label className="block text-sm font-medium">Line Height</label>
+            <label className="block text-sm font-medium">Line Height (Text Spacing)</label>
             <input 
               type="number" 
               step="0.1"
@@ -69,6 +69,7 @@ const CustomizationPanel = () => {
               onChange={(e) => style.setLineHeight(Number(e.target.value))} 
               className="w-full p-1 border rounded" 
             />
+            <span className="text-xs text-gray-500">Controls text line spacing</span>
           </div>
           <div>
             <label className="block text-sm font-medium">Page Size</label>
@@ -288,13 +289,14 @@ const CustomizationPanel = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium">Line Spacing (px)</label>
+            <label className="block text-sm font-medium">Ruled Line Spacing (px)</label>
             <input 
               type="number" 
               value={style.lineSpacing} 
               onChange={(e) => style.setLineSpacing(Number(e.target.value))} 
               className="w-full p-1 border rounded" 
             />
+            <span className="text-xs text-gray-500">Distance between ruled lines</span>
           </div>
           <div>
             <label className="block text-sm font-medium">Line Color</label>
